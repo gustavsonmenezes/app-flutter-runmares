@@ -4,7 +4,9 @@ import 'package:runmares/core/constants/app_spacing.dart';
 import 'package:runmares/features/recording/domain/recording_status.dart';
 import 'package:runmares/features/recording/presentation/controllers/recording_controller.dart';
 import 'package:runmares/features/recording/presentation/widgets/activity_type_selector.dart';
+import 'package:runmares/features/recording/presentation/widgets/location_failure_notice.dart';
 import 'package:runmares/features/recording/presentation/widgets/recording_controls.dart';
+import 'package:runmares/features/recording/presentation/widgets/recording_metrics.dart';
 
 class RecordingPage extends ConsumerWidget {
   const RecordingPage({super.key});
@@ -14,6 +16,7 @@ class RecordingPage extends ConsumerWidget {
     final state = ref.watch(recordingControllerProvider);
     final controller = ref.read(recordingControllerProvider.notifier);
     final isIdle = state.status == RecordingStatus.idle;
+    final failure = state.locationFailure;
 
     return Scaffold(
       appBar: AppBar(title: const Text('Gravar atividade')),
@@ -27,11 +30,22 @@ class RecordingPage extends ConsumerWidget {
               onChanged: isIdle ? controller.selectActivityType : null,
             ),
             const Spacer(),
+            RecordingMetrics(distanceMeters: state.distanceMeters),
+            const SizedBox(height: AppSpacing.itemGap),
             Text(
               _statusMessage(state.status),
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.titleLarge,
             ),
+            if (failure != null) ...[
+              const SizedBox(height: AppSpacing.itemGap),
+              LocationFailureNotice(
+                reason: failure,
+                onOpenSettings: ref
+                    .read(locationServiceProvider)
+                    .openAppSettings,
+              ),
+            ],
             const Spacer(),
             RecordingControls(
               status: state.status,

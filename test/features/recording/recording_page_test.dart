@@ -1,14 +1,24 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:runmares/features/recording/presentation/controllers/recording_controller.dart';
 import 'package:runmares/features/recording/presentation/pages/recording_page.dart';
+
+import 'fakes/fake_location_service.dart';
 
 void main() {
   testWidgets('asks for confirmation before finishing the activity', (
     tester,
   ) async {
     await tester.pumpWidget(
-      const ProviderScope(child: MaterialApp(home: RecordingPage())),
+      ProviderScope(
+        overrides: [
+          locationServiceProvider.overrideWithValue(
+            const FakeLocationService(),
+          ),
+        ],
+        child: const MaterialApp(home: RecordingPage()),
+      ),
     );
 
     await tester.tap(find.text('Iniciar'));
