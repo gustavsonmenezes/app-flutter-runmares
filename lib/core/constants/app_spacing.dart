@@ -1,0 +1,4 @@
+abstract final class AppSpacing {
+  static const double screenPadding = 24;
+  static const double itemGap = 16;
+}
