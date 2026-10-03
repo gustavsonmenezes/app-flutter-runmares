@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:runmares/features/history/data/activity_repository_provider.dart';
 import 'package:runmares/features/recording/presentation/controllers/recording_controller.dart';
 import 'package:runmares/features/recording/presentation/pages/recording_page.dart';
 
+import 'fakes/fake_activity_repository.dart';
 import 'fakes/fake_location_service.dart';
 
 void main() {
@@ -15,6 +17,9 @@ void main() {
         overrides: [
           locationServiceProvider.overrideWithValue(
             const FakeLocationService(),
+          ),
+          activityRepositoryProvider.overrideWithValue(
+            FakeActivityRepository(),
           ),
         ],
         child: const MaterialApp(home: RecordingPage()),
