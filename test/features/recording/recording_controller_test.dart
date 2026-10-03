@@ -118,6 +118,21 @@ void main() {
     expect(currentState().distanceMeters, closeTo(222.4, 1));
   });
 
+  test('keeps the route in separate segments around a pause', () async {
+    controller.start();
+    locationUpdates.add(_point(0, 0));
+    locationUpdates.add(_point(0.001, 30));
+    await pumpEventQueue();
+
+    controller.pause();
+    controller.resume();
+    locationUpdates.add(_point(0.5, 600));
+    locationUpdates.add(_point(0.501, 630));
+    await pumpEventQueue();
+
+    expect(currentState().routeSegments, hasLength(2));
+  });
+
   test('goes back to idle when location is not available', () async {
     container.dispose();
     container = containerWith(

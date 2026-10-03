@@ -68,4 +68,27 @@ void main() {
     expect(tracker.totalMeters, 0);
     expect(tracker.hasAcceptedPoint, isFalse);
   });
+
+  test('keeps accepted points in a single segment', () {
+    tracker.add(_point(0, 0));
+    tracker.add(_point(0.001, 30));
+
+    expect(tracker.segments, hasLength(1));
+    expect(tracker.segments.first, hasLength(2));
+  });
+
+  test('does not store discarded points', () {
+    tracker.add(_point(0, 0));
+    tracker.add(_point(0.001, 30, accuracy: 50));
+
+    expect(tracker.segments.single, hasLength(1));
+  });
+
+  test('starts a new segment after startNewSegment', () {
+    tracker.add(_point(0, 0));
+    tracker.startNewSegment();
+    tracker.add(_point(0.5, 600));
+
+    expect(tracker.segments, hasLength(2));
+  });
 }

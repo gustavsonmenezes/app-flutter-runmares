@@ -49,6 +49,7 @@ class RecordingController extends Notifier<RecordingState> {
       status: RecordingStatus.recording,
       distanceMeters: 0,
       elapsed: Duration.zero,
+      routeSegments: const [],
       clearLocationFailure: true,
     );
     _startTracking();
@@ -118,7 +119,10 @@ class RecordingController extends Notifier<RecordingState> {
 
   void _onPoint(TrackPoint point) {
     _tracker.add(point);
-    state = state.copyWith(distanceMeters: _tracker.totalMeters);
+    state = state.copyWith(
+      distanceMeters: _tracker.totalMeters,
+      routeSegments: _tracker.segments,
+    );
   }
 
   void _onLocationError(Object error) {
