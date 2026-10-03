@@ -1,7 +1,10 @@
 import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:runmares/features/history/data/activity_repository_provider.dart';
+import 'package:runmares/features/history/domain/recorded_activity.dart';
 import 'package:runmares/features/recording/data/location_service.dart';
+import 'package:runmares/features/recording/domain/activity_save_status.dart';
 import 'package:runmares/features/recording/domain/activity_timer.dart';
 import 'package:runmares/features/recording/domain/activity_type.dart';
 import 'package:runmares/features/recording/domain/distance_tracker.dart';
@@ -26,10 +29,16 @@ class RecordingController extends Notifier<RecordingState> {
   final ActivityTimer _timer = ActivityTimer();
   StreamSubscription<TrackPoint>? _subscription;
   Timer? _ticker;
+  DateTime? _startedAt;
+  bool _isDisposed = false;
 
   @override
   RecordingState build() {
-    ref.onDispose(_stopTracking);
+    _isDisposed = false;
+    ref.onDispose(() {
+      _isDisposed = true;
+      _stopTracking();
+    });
     _tracker.reset();
     _timer.reset();
     return const RecordingState();
@@ -45,10 +54,13 @@ class RecordingController extends Notifier<RecordingState> {
 
     _tracker.reset();
     _timer.reset();
+    _startedAt = DateTime.now();
     state = state.copyWith(
       status: RecordingStatus.recording,
       distanceMeters: 0,
       elapsed: Duration.zero,
+      routeSegments: const [],
+      saveStatus: ActivitySaveStatus.none,
       clearLocationFailure: true,
     );
     _startTracking();
@@ -74,7 +86,7 @@ class RecordingController extends Notifier<RecordingState> {
     _startTracking();
   }
 
-  void finish() {
+  Future<void> finish() async {
     final canFinish =
         state.status == RecordingStatus.recording ||
         state.status == RecordingStatus.paused;
@@ -85,13 +97,44 @@ class RecordingController extends Notifier<RecordingState> {
       status: RecordingStatus.finished,
       elapsed: _timer.elapsed,
     );
+    await _saveActivity();
   }
 
   void reset() {
     _stopTracking();
     _tracker.reset();
     _timer.reset();
+    _startedAt = null;
     state = RecordingState(activityType: state.activityType);
+  }
+
+  Future<void> _saveActivity() async {
+    final startedAt = _startedAt;
+    final segments = _tracker.segments;
+    if (startedAt == null || segments.isEmpty) return;
+
+    final activity = RecordedActivity(
+      type: state.activityType,
+      startedAt: startedAt,
+      duration: state.elapsed,
+      distanceMeters: state.distanceMeters,
+      segments: segments,
+    );
+
+    state = state.copyWith(saveStatus: ActivitySaveStatus.saving);
+    try {
+      await ref.read(activityRepositoryProvider).save(activity);
+      _updateSaveStatus(ActivitySaveStatus.saved);
+    } on Exception {
+      _updateSaveStatus(ActivitySaveStatus.failed);
+    }
+  }
+
+  // Ignora o resultado se a tela já foi reiniciada ou descartada durante o
+  // salvamento, para não sobrescrever o estado de uma nova atividade.
+  void _updateSaveStatus(ActivitySaveStatus status) {
+    if (_isDisposed || state.status != RecordingStatus.finished) return;
+    state = state.copyWith(saveStatus: status);
   }
 
   void _startTracking() {
@@ -118,7 +161,10 @@ class RecordingController extends Notifier<RecordingState> {
 
   void _onPoint(TrackPoint point) {
     _tracker.add(point);
-    state = state.copyWith(distanceMeters: _tracker.totalMeters);
+    state = state.copyWith(
+      distanceMeters: _tracker.totalMeters,
+      routeSegments: _tracker.segments,
+    );
   }
 
   void _onLocationError(Object error) {

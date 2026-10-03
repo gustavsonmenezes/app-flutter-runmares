@@ -19,11 +19,7 @@ class ActivityTypeSelector extends StatelessWidget {
       showSelectedIcon: false,
       segments: [
         for (final type in ActivityType.values)
-          ButtonSegment(
-            value: type,
-            label: Text(_labelOf(type)),
-            icon: Icon(_iconOf(type)),
-          ),
+          ButtonSegment(value: type, label: Text(_labelOf(type))),
       ],
       selected: {selected},
       onSelectionChanged: callback == null
@@ -37,14 +33,6 @@ class ActivityTypeSelector extends StatelessWidget {
       ActivityType.running => 'Corrida',
       ActivityType.walking => 'Caminhada',
       ActivityType.cycling => 'Bicicleta',
-    };
-  }
-
-  IconData _iconOf(ActivityType type) {
-    return switch (type) {
-      ActivityType.running => Icons.directions_run,
-      ActivityType.walking => Icons.directions_walk,
-      ActivityType.cycling => Icons.directions_bike,
     };
   }
 }

@@ -2,6 +2,8 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:runmares/features/history/data/activity_repository_provider.dart';
+import 'package:runmares/features/recording/domain/activity_save_status.dart';
 import 'package:runmares/features/recording/domain/activity_type.dart';
 import 'package:runmares/features/recording/domain/location_failure.dart';
 import 'package:runmares/features/recording/domain/recording_status.dart';
@@ -9,6 +11,7 @@ import 'package:runmares/features/recording/domain/track_point.dart';
 import 'package:runmares/features/recording/presentation/controllers/recording_controller.dart';
 import 'package:runmares/features/recording/presentation/controllers/recording_state.dart';
 
+import 'fakes/fake_activity_repository.dart';
 import 'fakes/fake_location_service.dart';
 
 TrackPoint _point(double latitude, int seconds) {
@@ -22,6 +25,7 @@ TrackPoint _point(double latitude, int seconds) {
 
 void main() {
   late StreamController<TrackPoint> locationUpdates;
+  late FakeActivityRepository repository;
   late ProviderContainer container;
   late RecordingController controller;
 
@@ -29,12 +33,16 @@ void main() {
 
   ProviderContainer containerWith(FakeLocationService service) {
     return ProviderContainer(
-      overrides: [locationServiceProvider.overrideWithValue(service)],
+      overrides: [
+        locationServiceProvider.overrideWithValue(service),
+        activityRepositoryProvider.overrideWithValue(repository),
+      ],
     );
   }
 
   setUp(() {
     locationUpdates = StreamController<TrackPoint>.broadcast();
+    repository = FakeActivityRepository();
     container = containerWith(FakeLocationService(locationUpdates.stream));
     controller = container.read(recordingControllerProvider.notifier);
   });
@@ -85,10 +93,12 @@ void main() {
 
     controller.finish();
     controller.reset();
+    await pumpEventQueue();
 
     expect(currentState().status, RecordingStatus.idle);
     expect(currentState().activityType, ActivityType.walking);
     expect(currentState().distanceMeters, 0);
+    expect(currentState().saveStatus, ActivitySaveStatus.none);
   });
 
   test('accumulates the distance from location updates', () async {
@@ -116,6 +126,58 @@ void main() {
     await pumpEventQueue();
 
     expect(currentState().distanceMeters, closeTo(222.4, 1));
+  });
+
+  test('keeps the route in separate segments around a pause', () async {
+    controller.start();
+    locationUpdates.add(_point(0, 0));
+    locationUpdates.add(_point(0.001, 30));
+    await pumpEventQueue();
+
+    controller.pause();
+    controller.resume();
+    locationUpdates.add(_point(0.5, 600));
+    locationUpdates.add(_point(0.501, 630));
+    await pumpEventQueue();
+
+    expect(currentState().routeSegments, hasLength(2));
+  });
+
+  test('saves the finished activity with its route', () async {
+    controller.selectActivityType(ActivityType.walking);
+    controller.start();
+    locationUpdates.add(_point(0, 0));
+    locationUpdates.add(_point(0.001, 30));
+    await pumpEventQueue();
+
+    await controller.finish();
+
+    expect(repository.saved, hasLength(1));
+    expect(repository.saved.single.type, ActivityType.walking);
+    expect(repository.saved.single.distanceMeters, closeTo(111.2, 0.5));
+    expect(repository.saved.single.segments.single, hasLength(2));
+    expect(currentState().saveStatus, ActivitySaveStatus.saved);
+  });
+
+  test('does not save an activity without location points', () async {
+    controller.start();
+
+    await controller.finish();
+
+    expect(repository.saved, isEmpty);
+    expect(currentState().saveStatus, ActivitySaveStatus.none);
+  });
+
+  test('reports a failure when saving fails', () async {
+    repository.shouldFail = true;
+    controller.start();
+    locationUpdates.add(_point(0, 0));
+    await pumpEventQueue();
+
+    await controller.finish();
+
+    expect(currentState().status, RecordingStatus.finished);
+    expect(currentState().saveStatus, ActivitySaveStatus.failed);
   });
 
   test('goes back to idle when location is not available', () async {
