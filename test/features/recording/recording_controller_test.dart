@@ -1,0 +1,137 @@
+import 'dart:async';
+
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:runmares/features/recording/domain/activity_type.dart';
+import 'package:runmares/features/recording/domain/location_failure.dart';
+import 'package:runmares/features/recording/domain/recording_status.dart';
+import 'package:runmares/features/recording/domain/track_point.dart';
+import 'package:runmares/features/recording/presentation/controllers/recording_controller.dart';
+import 'package:runmares/features/recording/presentation/controllers/recording_state.dart';
+
+import 'fakes/fake_location_service.dart';
+
+TrackPoint _point(double latitude, int seconds) {
+  return TrackPoint(
+    latitude: latitude,
+    longitude: 0,
+    accuracyMeters: 5,
+    timestamp: DateTime(2026).add(Duration(seconds: seconds)),
+  );
+}
+
+void main() {
+  late StreamController<TrackPoint> locationUpdates;
+  late ProviderContainer container;
+  late RecordingController controller;
+
+  RecordingState currentState() => container.read(recordingControllerProvider);
+
+  ProviderContainer containerWith(FakeLocationService service) {
+    return ProviderContainer(
+      overrides: [locationServiceProvider.overrideWithValue(service)],
+    );
+  }
+
+  setUp(() {
+    locationUpdates = StreamController<TrackPoint>.broadcast();
+    container = containerWith(FakeLocationService(locationUpdates.stream));
+    controller = container.read(recordingControllerProvider.notifier);
+  });
+
+  tearDown(() {
+    container.dispose();
+    locationUpdates.close();
+  });
+
+  test('starts idle', () {
+    expect(currentState().status, RecordingStatus.idle);
+  });
+
+  test('goes through start, pause, resume and finish', () {
+    controller.start();
+    expect(currentState().status, RecordingStatus.recording);
+
+    controller.pause();
+    expect(currentState().status, RecordingStatus.paused);
+
+    controller.resume();
+    expect(currentState().status, RecordingStatus.recording);
+
+    controller.finish();
+    expect(currentState().status, RecordingStatus.finished);
+  });
+
+  test('ignores pause and finish before the activity starts', () {
+    controller.pause();
+    controller.finish();
+
+    expect(currentState().status, RecordingStatus.idle);
+  });
+
+  test('does not change the activity type while recording', () {
+    controller.start();
+    controller.selectActivityType(ActivityType.cycling);
+
+    expect(currentState().activityType, ActivityType.running);
+  });
+
+  test('reset returns to idle and keeps the activity type', () async {
+    controller.selectActivityType(ActivityType.walking);
+    controller.start();
+    locationUpdates.add(_point(0, 0));
+    locationUpdates.add(_point(0.001, 30));
+    await pumpEventQueue();
+
+    controller.finish();
+    controller.reset();
+
+    expect(currentState().status, RecordingStatus.idle);
+    expect(currentState().activityType, ActivityType.walking);
+    expect(currentState().distanceMeters, 0);
+  });
+
+  test('accumulates the distance from location updates', () async {
+    controller.start();
+    locationUpdates.add(_point(0, 0));
+    locationUpdates.add(_point(0.001, 30));
+    await pumpEventQueue();
+
+    expect(currentState().distanceMeters, closeTo(111.2, 0.5));
+  });
+
+  test('does not count the distance travelled while paused', () async {
+    controller.start();
+    locationUpdates.add(_point(0, 0));
+    locationUpdates.add(_point(0.001, 30));
+    await pumpEventQueue();
+
+    controller.pause();
+    locationUpdates.add(_point(0.2, 60));
+    await pumpEventQueue();
+
+    controller.resume();
+    locationUpdates.add(_point(0.5, 600));
+    locationUpdates.add(_point(0.501, 630));
+    await pumpEventQueue();
+
+    expect(currentState().distanceMeters, closeTo(222.4, 1));
+  });
+
+  test('goes back to idle when location is not available', () async {
+    container.dispose();
+    container = containerWith(
+      FakeLocationService.failing(LocationFailureReason.permissionDenied),
+    );
+    controller = container.read(recordingControllerProvider.notifier);
+
+    controller.start();
+    await pumpEventQueue();
+
+    expect(currentState().status, RecordingStatus.idle);
+    expect(
+      currentState().locationFailure,
+      LocationFailureReason.permissionDenied,
+    );
+  });
+}
