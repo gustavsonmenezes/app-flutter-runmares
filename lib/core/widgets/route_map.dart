@@ -7,11 +7,13 @@ class RouteMap extends StatefulWidget {
   const RouteMap({
     required this.segments,
     this.followLastPoint = false,
+    this.fitRoute = false,
     super.key,
   });
 
   final List<List<LatLng>> segments;
   final bool followLastPoint;
+  final bool fitRoute;
 
   @override
   State<RouteMap> createState() => _RouteMapState();
@@ -21,6 +23,7 @@ class _RouteMapState extends State<RouteMap> {
   static const LatLng _defaultCenter = LatLng(-14.235, -51.9253);
   static const double _defaultZoom = 4;
   static const double _focusZoom = 17;
+  static const double _fitPadding = 32;
   static const double _routeWidth = 5;
   static const double _markerSize = 22;
   static const String _tileUrl =
@@ -32,7 +35,7 @@ class _RouteMapState extends State<RouteMap> {
   @override
   void didUpdateWidget(RouteMap oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (!widget.followLastPoint) return;
+    if (!widget.followLastPoint || widget.fitRoute) return;
 
     final previous = _lastPointOf(oldWidget.segments);
     final current = _lastPointOf(widget.segments);
@@ -53,14 +56,11 @@ class _RouteMapState extends State<RouteMap> {
 
   @override
   Widget build(BuildContext context) {
-    final lastPoint = _lastPointOf(widget.segments);
+    final points = [for (final segment in widget.segments) ...segment];
 
     return FlutterMap(
       mapController: _controller,
-      options: MapOptions(
-        initialCenter: lastPoint ?? _defaultCenter,
-        initialZoom: lastPoint == null ? _defaultZoom : _focusZoom,
-      ),
+      options: _buildOptions(points),
       children: [
         TileLayer(
           urlTemplate: _tileUrl,
@@ -77,21 +77,48 @@ class _RouteMapState extends State<RouteMap> {
                 ),
           ],
         ),
-        if (lastPoint != null)
-          MarkerLayer(
-            markers: [
-              Marker(
-                point: lastPoint,
-                width: _markerSize,
-                height: _markerSize,
-                child: const _PositionDot(),
-              ),
-            ],
-          ),
+        MarkerLayer(markers: _buildMarkers(points)),
         const RichAttributionWidget(
           attributions: [TextSourceAttribution('OpenStreetMap contributors')],
         ),
       ],
+    );
+  }
+
+  MapOptions _buildOptions(List<LatLng> points) {
+    if (widget.fitRoute && points.isNotEmpty) {
+      return MapOptions(
+        initialCameraFit: CameraFit.coordinates(
+          coordinates: points,
+          padding: const EdgeInsets.all(_fitPadding),
+          maxZoom: _focusZoom,
+        ),
+      );
+    }
+
+    final center = points.isEmpty ? null : points.last;
+    return MapOptions(
+      initialCenter: center ?? _defaultCenter,
+      initialZoom: center == null ? _defaultZoom : _focusZoom,
+    );
+  }
+
+  List<Marker> _buildMarkers(List<LatLng> points) {
+    if (points.isEmpty) return const [];
+    if (!widget.fitRoute) return [_marker(points.last, AppColors.primary)];
+
+    return [
+      _marker(points.first, AppColors.routeStart),
+      _marker(points.last, AppColors.primary),
+    ];
+  }
+
+  Marker _marker(LatLng point, Color color) {
+    return Marker(
+      point: point,
+      width: _markerSize,
+      height: _markerSize,
+      child: _PositionDot(color: color),
     );
   }
 
@@ -104,7 +131,9 @@ class _RouteMapState extends State<RouteMap> {
 }
 
 class _PositionDot extends StatelessWidget {
-  const _PositionDot();
+  const _PositionDot({required this.color});
+
+  final Color color;
 
   static const double _borderWidth = 3;
 
@@ -112,7 +141,7 @@ class _PositionDot extends StatelessWidget {
   Widget build(BuildContext context) {
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: AppColors.primary,
+        color: color,
         shape: BoxShape.circle,
         border: Border.all(color: Colors.white, width: _borderWidth),
       ),

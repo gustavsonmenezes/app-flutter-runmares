@@ -34,4 +34,13 @@ void main() {
       expect(MetricFormatters.pace(null), '--:--');
     });
   });
+
+  group('dateTime', () {
+    test('formats day, month, year and time', () {
+      expect(
+        MetricFormatters.dateTime(DateTime(2026, 10, 3, 8, 5)),
+        '03/10/2026 08:05',
+      );
+    });
+  });
 }

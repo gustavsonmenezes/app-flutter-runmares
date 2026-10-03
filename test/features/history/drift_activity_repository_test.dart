@@ -15,10 +15,10 @@ TrackPoint _point(double latitude, int seconds) {
   );
 }
 
-RecordedActivity _activity() {
+RecordedActivity _activity({DateTime? startedAt}) {
   return RecordedActivity(
     type: ActivityType.running,
-    startedAt: DateTime(2026, 10, 3, 8),
+    startedAt: startedAt ?? DateTime(2026, 10, 3, 8),
     duration: const Duration(minutes: 5),
     distanceMeters: 1000,
     segments: [
@@ -60,5 +60,33 @@ void main() {
 
     final points = await database.select(database.trackPointRecords).get();
     expect(points, isEmpty);
+  });
+
+  test('lists the activities from the newest to the oldest', () async {
+    final older = DateTime(2026, 10, 1, 8);
+    final newer = DateTime(2026, 10, 3, 8);
+    await repository.save(_activity(startedAt: older));
+    await repository.save(_activity(startedAt: newer));
+
+    final summaries = await repository.watchSummaries().first;
+
+    expect(summaries.map((summary) => summary.startedAt), [newer, older]);
+  });
+
+  test('loads the details with the route grouped by segment', () async {
+    final id = await repository.save(_activity());
+
+    final details = await repository.findDetails(id);
+
+    expect(details, isNotNull);
+    expect(details!.summary.distanceMeters, 1000);
+    expect(details.summary.duration, const Duration(minutes: 5));
+    expect(details.segments, hasLength(2));
+    expect(details.segments.first, hasLength(2));
+    expect(details.segments.last, hasLength(1));
+  });
+
+  test('returns null for an unknown activity', () async {
+    expect(await repository.findDetails(999), isNull);
   });
 }

@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:latlong2/latlong.dart';
 import 'package:runmares/core/constants/app_spacing.dart';
 import 'package:runmares/core/widgets/route_map.dart';
 import 'package:runmares/features/recording/domain/activity_save_status.dart';
 import 'package:runmares/features/recording/domain/recording_status.dart';
-import 'package:runmares/features/recording/domain/track_point.dart';
+import 'package:runmares/features/recording/presentation/extensions/route_segments_extension.dart';
 import 'package:runmares/features/recording/presentation/controllers/recording_controller.dart';
 import 'package:runmares/features/recording/presentation/widgets/activity_type_selector.dart';
 import 'package:runmares/features/recording/presentation/widgets/location_failure_notice.dart';
@@ -39,7 +38,7 @@ class RecordingPage extends ConsumerWidget {
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(AppSpacing.mapCornerRadius),
                 child: RouteMap(
-                  segments: _toLatLngSegments(state.routeSegments),
+                  segments: state.routeSegments.toLatLngSegments(),
                   followLastPoint: true,
                 ),
               ),
@@ -82,13 +81,6 @@ class RecordingPage extends ConsumerWidget {
         ),
       ),
     );
-  }
-
-  List<List<LatLng>> _toLatLngSegments(List<List<TrackPoint>> segments) {
-    return [
-      for (final segment in segments)
-        [for (final point in segment) LatLng(point.latitude, point.longitude)],
-    ];
   }
 
   Future<void> _confirmFinish(
