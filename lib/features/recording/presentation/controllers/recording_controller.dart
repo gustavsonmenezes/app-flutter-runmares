@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:runmares/features/recording/data/location_service.dart';
+import 'package:runmares/features/recording/domain/activity_timer.dart';
 import 'package:runmares/features/recording/domain/activity_type.dart';
 import 'package:runmares/features/recording/domain/distance_tracker.dart';
 import 'package:runmares/features/recording/domain/location_failure.dart';
@@ -19,13 +20,18 @@ final recordingControllerProvider =
     );
 
 class RecordingController extends Notifier<RecordingState> {
+  static const Duration _tickInterval = Duration(seconds: 1);
+
   final DistanceTracker _tracker = DistanceTracker();
+  final ActivityTimer _timer = ActivityTimer();
   StreamSubscription<TrackPoint>? _subscription;
+  Timer? _ticker;
 
   @override
   RecordingState build() {
-    ref.onDispose(_stopListening);
+    ref.onDispose(_stopTracking);
     _tracker.reset();
+    _timer.reset();
     return const RecordingState();
   }
 
@@ -38,19 +44,24 @@ class RecordingController extends Notifier<RecordingState> {
     if (state.status != RecordingStatus.idle) return;
 
     _tracker.reset();
+    _timer.reset();
     state = state.copyWith(
       status: RecordingStatus.recording,
       distanceMeters: 0,
+      elapsed: Duration.zero,
       clearLocationFailure: true,
     );
-    _startListening();
+    _startTracking();
   }
 
   void pause() {
     if (state.status != RecordingStatus.recording) return;
 
-    _stopListening();
-    state = state.copyWith(status: RecordingStatus.paused);
+    _stopTracking();
+    state = state.copyWith(
+      status: RecordingStatus.paused,
+      elapsed: _timer.elapsed,
+    );
   }
 
   void resume() {
@@ -60,7 +71,7 @@ class RecordingController extends Notifier<RecordingState> {
       status: RecordingStatus.recording,
       clearLocationFailure: true,
     );
-    _startListening();
+    _startTracking();
   }
 
   void finish() {
@@ -69,27 +80,40 @@ class RecordingController extends Notifier<RecordingState> {
         state.status == RecordingStatus.paused;
     if (!canFinish) return;
 
-    _stopListening();
-    state = state.copyWith(status: RecordingStatus.finished);
+    _stopTracking();
+    state = state.copyWith(
+      status: RecordingStatus.finished,
+      elapsed: _timer.elapsed,
+    );
   }
 
   void reset() {
-    _stopListening();
+    _stopTracking();
     _tracker.reset();
+    _timer.reset();
     state = RecordingState(activityType: state.activityType);
   }
 
-  void _startListening() {
+  void _startTracking() {
+    _timer.start();
     _tracker.startNewSegment();
     _subscription = ref
         .read(locationServiceProvider)
         .watchPosition()
         .listen(_onPoint, onError: _onLocationError);
+    _ticker = Timer.periodic(_tickInterval, (_) => _publishElapsed());
   }
 
-  void _stopListening() {
+  void _stopTracking() {
     _subscription?.cancel();
     _subscription = null;
+    _ticker?.cancel();
+    _ticker = null;
+    _timer.pause();
+  }
+
+  void _publishElapsed() {
+    state = state.copyWith(elapsed: _timer.elapsed);
   }
 
   void _onPoint(TrackPoint point) {
@@ -98,15 +122,20 @@ class RecordingController extends Notifier<RecordingState> {
   }
 
   void _onLocationError(Object error) {
-    _stopListening();
+    _stopTracking();
 
     final reason = error is LocationException
         ? error.reason
         : LocationFailureReason.unavailable;
-    final status = _tracker.hasAcceptedPoint
-        ? RecordingStatus.paused
-        : RecordingStatus.idle;
+    final hasRecordedDistance = _tracker.hasAcceptedPoint;
+    if (!hasRecordedDistance) _timer.reset();
 
-    state = state.copyWith(status: status, locationFailure: reason);
+    state = state.copyWith(
+      status: hasRecordedDistance
+          ? RecordingStatus.paused
+          : RecordingStatus.idle,
+      elapsed: _timer.elapsed,
+      locationFailure: reason,
+    );
   }
 }

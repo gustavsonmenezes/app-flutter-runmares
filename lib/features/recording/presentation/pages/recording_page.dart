@@ -30,7 +30,11 @@ class RecordingPage extends ConsumerWidget {
               onChanged: isIdle ? controller.selectActivityType : null,
             ),
             const Spacer(),
-            RecordingMetrics(distanceMeters: state.distanceMeters),
+            RecordingMetrics(
+              distanceMeters: state.distanceMeters,
+              elapsed: state.elapsed,
+              paceSecondsPerKilometer: state.averagePaceSecondsPerKilometer,
+            ),
             const SizedBox(height: AppSpacing.itemGap),
             Text(
               _statusMessage(state.status),
