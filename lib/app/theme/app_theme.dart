@@ -14,6 +14,10 @@ abstract final class AppTheme {
       surface: AppColors.background,
       onSurface: AppColors.textPrimary,
     );
+    const buttonSize = Size.fromHeight(_buttonHeight);
+    final buttonShape = RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(_borderRadius),
+    );
 
     return ThemeData(
       useMaterial3: true,
@@ -21,10 +25,14 @@ abstract final class AppTheme {
       scaffoldBackgroundColor: AppColors.background,
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(
-          minimumSize: const Size.fromHeight(_buttonHeight),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(_borderRadius),
-          ),
+          minimumSize: buttonSize,
+          shape: buttonShape,
+        ),
+      ),
+      outlinedButtonTheme: OutlinedButtonThemeData(
+        style: OutlinedButton.styleFrom(
+          minimumSize: buttonSize,
+          shape: buttonShape,
         ),
       ),
     );
