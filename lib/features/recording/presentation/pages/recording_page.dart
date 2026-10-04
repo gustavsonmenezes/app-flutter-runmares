@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:runmares/core/constants/app_spacing.dart';
+import 'package:runmares/core/widgets/route_map.dart';
+import 'package:runmares/features/recording/domain/activity_save_status.dart';
 import 'package:runmares/features/recording/domain/recording_status.dart';
+import 'package:runmares/features/recording/presentation/extensions/route_segments_extension.dart';
 import 'package:runmares/features/recording/presentation/controllers/recording_controller.dart';
 import 'package:runmares/features/recording/presentation/widgets/activity_type_selector.dart';
 import 'package:runmares/features/recording/presentation/widgets/location_failure_notice.dart';
@@ -17,6 +20,7 @@ class RecordingPage extends ConsumerWidget {
     final controller = ref.read(recordingControllerProvider.notifier);
     final isIdle = state.status == RecordingStatus.idle;
     final failure = state.locationFailure;
+    final saveMessage = _saveMessage(state.saveStatus);
 
     return Scaffold(
       appBar: AppBar(title: const Text('Gravar atividade')),
@@ -29,7 +33,17 @@ class RecordingPage extends ConsumerWidget {
               selected: state.activityType,
               onChanged: isIdle ? controller.selectActivityType : null,
             ),
-            const Spacer(),
+            const SizedBox(height: AppSpacing.itemGap),
+            Expanded(
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(AppSpacing.mapCornerRadius),
+                child: RouteMap(
+                  segments: state.routeSegments.toLatLngSegments(),
+                  followLastPoint: true,
+                ),
+              ),
+            ),
+            const SizedBox(height: AppSpacing.itemGap),
             RecordingMetrics(
               distanceMeters: state.distanceMeters,
               elapsed: state.elapsed,
@@ -41,6 +55,10 @@ class RecordingPage extends ConsumerWidget {
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.titleLarge,
             ),
+            if (saveMessage != null) ...[
+              const SizedBox(height: AppSpacing.itemGap),
+              Text(saveMessage, textAlign: TextAlign.center),
+            ],
             if (failure != null) ...[
               const SizedBox(height: AppSpacing.itemGap),
               LocationFailureNotice(
@@ -50,7 +68,7 @@ class RecordingPage extends ConsumerWidget {
                     .openAppSettings,
               ),
             ],
-            const Spacer(),
+            const SizedBox(height: AppSpacing.itemGap),
             RecordingControls(
               status: state.status,
               onStart: controller.start,
@@ -87,7 +105,7 @@ class RecordingPage extends ConsumerWidget {
       ),
     );
 
-    if (confirmed == true) controller.finish();
+    if (confirmed == true) await controller.finish();
   }
 
   String _statusMessage(RecordingStatus status) {
@@ -96,6 +114,15 @@ class RecordingPage extends ConsumerWidget {
       RecordingStatus.recording => 'Gravando...',
       RecordingStatus.paused => 'Atividade pausada',
       RecordingStatus.finished => 'Atividade finalizada',
+    };
+  }
+
+  String? _saveMessage(ActivitySaveStatus status) {
+    return switch (status) {
+      ActivitySaveStatus.none => null,
+      ActivitySaveStatus.saving => 'Salvando atividade...',
+      ActivitySaveStatus.saved => 'Atividade salva no aparelho',
+      ActivitySaveStatus.failed => 'Não foi possível salvar a atividade',
     };
   }
 }

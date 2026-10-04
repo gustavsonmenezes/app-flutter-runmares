@@ -1,7 +1,9 @@
+import 'package:runmares/features/recording/domain/activity_save_status.dart';
 import 'package:runmares/features/recording/domain/activity_type.dart';
 import 'package:runmares/features/recording/domain/location_failure.dart';
 import 'package:runmares/features/recording/domain/pace_calculator.dart';
 import 'package:runmares/features/recording/domain/recording_status.dart';
+import 'package:runmares/features/recording/domain/track_point.dart';
 
 class RecordingState {
   const RecordingState({
@@ -9,6 +11,8 @@ class RecordingState {
     this.activityType = ActivityType.running,
     this.distanceMeters = 0,
     this.elapsed = Duration.zero,
+    this.routeSegments = const [],
+    this.saveStatus = ActivitySaveStatus.none,
     this.locationFailure,
   });
 
@@ -16,6 +20,8 @@ class RecordingState {
   final ActivityType activityType;
   final double distanceMeters;
   final Duration elapsed;
+  final List<List<TrackPoint>> routeSegments;
+  final ActivitySaveStatus saveStatus;
   final LocationFailureReason? locationFailure;
 
   int? get averagePaceSecondsPerKilometer {
@@ -30,6 +36,8 @@ class RecordingState {
     ActivityType? activityType,
     double? distanceMeters,
     Duration? elapsed,
+    List<List<TrackPoint>>? routeSegments,
+    ActivitySaveStatus? saveStatus,
     LocationFailureReason? locationFailure,
     bool clearLocationFailure = false,
   }) {
@@ -38,6 +46,8 @@ class RecordingState {
       activityType: activityType ?? this.activityType,
       distanceMeters: distanceMeters ?? this.distanceMeters,
       elapsed: elapsed ?? this.elapsed,
+      routeSegments: routeSegments ?? this.routeSegments,
+      saveStatus: saveStatus ?? this.saveStatus,
       locationFailure: clearLocationFailure
           ? null
           : locationFailure ?? this.locationFailure,

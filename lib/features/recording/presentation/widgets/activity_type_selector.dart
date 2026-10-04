@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:runmares/features/recording/domain/activity_type.dart';
+import 'package:runmares/features/recording/presentation/extensions/activity_type_presentation.dart';
 
 class ActivityTypeSelector extends StatelessWidget {
   const ActivityTypeSelector({
@@ -19,32 +20,12 @@ class ActivityTypeSelector extends StatelessWidget {
       showSelectedIcon: false,
       segments: [
         for (final type in ActivityType.values)
-          ButtonSegment(
-            value: type,
-            label: Text(_labelOf(type)),
-            icon: Icon(_iconOf(type)),
-          ),
+          ButtonSegment(value: type, label: Text(type.label)),
       ],
       selected: {selected},
       onSelectionChanged: callback == null
           ? null
           : (selection) => callback(selection.first),
     );
-  }
-
-  String _labelOf(ActivityType type) {
-    return switch (type) {
-      ActivityType.running => 'Corrida',
-      ActivityType.walking => 'Caminhada',
-      ActivityType.cycling => 'Bicicleta',
-    };
-  }
-
-  IconData _iconOf(ActivityType type) {
-    return switch (type) {
-      ActivityType.running => Icons.directions_run,
-      ActivityType.walking => Icons.directions_walk,
-      ActivityType.cycling => Icons.directions_bike,
-    };
   }
 }

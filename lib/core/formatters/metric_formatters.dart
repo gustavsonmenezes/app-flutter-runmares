@@ -26,5 +26,13 @@ abstract final class MetricFormatters {
     return '$minutes:${_twoDigits(seconds)}';
   }
 
+  static String dateTime(DateTime value) {
+    final day = _twoDigits(value.day);
+    final month = _twoDigits(value.month);
+    final hour = _twoDigits(value.hour);
+    final minute = _twoDigits(value.minute);
+    return '$day/$month/${value.year} $hour:$minute';
+  }
+
   static String _twoDigits(int value) => value.toString().padLeft(2, '0');
 }
