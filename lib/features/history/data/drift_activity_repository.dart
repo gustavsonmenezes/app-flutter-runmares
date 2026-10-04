@@ -18,6 +18,7 @@ class DriftActivityRepository implements ActivityRepository {
           .into(_database.activityRecords)
           .insert(
             ActivityRecordsCompanion.insert(
+              userId: activity.userId,
               type: activity.type,
               startedAt: activity.startedAt,
               durationSeconds: activity.duration.inSeconds,
@@ -45,18 +46,21 @@ class DriftActivityRepository implements ActivityRepository {
   }
 
   @override
-  Stream<List<ActivitySummary>> watchSummaries() {
+  Stream<List<ActivitySummary>> watchSummaries(String userId) {
     final query = _database.select(_database.activityRecords)
+      ..where((table) => table.userId.equals(userId))
       ..orderBy([(table) => OrderingTerm.desc(table.startedAt)]);
 
     return query.watch().map((rows) => rows.map(_toSummary).toList());
   }
 
   @override
-  Future<ActivityDetails?> findDetails(int id) async {
-    final record = await (_database.select(
-      _database.activityRecords,
-    )..where((table) => table.id.equals(id))).getSingleOrNull();
+  Future<ActivityDetails?> findDetails(int id, {required String userId}) async {
+    final record =
+        await (_database.select(_database.activityRecords)..where(
+              (table) => table.id.equals(id) & table.userId.equals(userId),
+            ))
+            .getSingleOrNull();
     if (record == null) return null;
 
     // Os pontos foram gravados em ordem, então o id preserva a sequência.

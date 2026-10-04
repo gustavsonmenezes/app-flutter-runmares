@@ -3,6 +3,7 @@ import 'package:runmares/features/recording/domain/track_point.dart';
 
 class RecordedActivity {
   const RecordedActivity({
+    required this.userId,
     required this.type,
     required this.startedAt,
     required this.duration,
@@ -10,6 +11,7 @@ class RecordedActivity {
     required this.segments,
   });
 
+  final String userId;
   final ActivityType type;
   final DateTime startedAt;
   final Duration duration;

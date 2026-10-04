@@ -19,10 +19,13 @@ class FakeActivityRepository implements ActivityRepository {
   }
 
   @override
-  Stream<List<ActivitySummary>> watchSummaries() {
+  Stream<List<ActivitySummary>> watchSummaries(String userId) {
     return Stream.value(List.unmodifiable(summaries));
   }
 
   @override
-  Future<ActivityDetails?> findDetails(int id) async => details[id];
+  Future<ActivityDetails?> findDetails(
+    int id, {
+    required String userId,
+  }) async => details[id];
 }
