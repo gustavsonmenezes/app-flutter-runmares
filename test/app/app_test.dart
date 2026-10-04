@@ -8,7 +8,7 @@ import 'package:runmares/features/auth/domain/auth_user.dart';
 import 'package:runmares/features/history/data/activity_repository_provider.dart';
 import 'package:runmares/features/recording/data/recording_draft_repository_provider.dart';
 import 'package:runmares/features/sync/data/remote_activity_store_provider.dart';
-
+import 'package:runmares/features/sync/presentation/providers/sync_providers.dart';
 import '../features/auth/fakes/fake_auth_repository.dart';
 import '../features/recording/fakes/fake_activity_repository.dart';
 import '../features/recording/fakes/fake_recording_draft_repository.dart';
@@ -21,6 +21,7 @@ Future<void> _pumpApp(
   await tester.pumpWidget(
     ProviderScope(
       overrides: [
+        autoSyncProvider.overrideWith((ref) {}),
         authRepositoryProvider.overrideWithValue(repository),
         activityRepositoryProvider.overrideWithValue(FakeActivityRepository()),
         recordingDraftRepositoryProvider.overrideWithValue(
