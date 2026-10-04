@@ -14,11 +14,20 @@ class AppDatabase extends _$AppDatabase {
   static const String _databaseName = 'runmares';
 
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 2;
 
   @override
   MigrationStrategy get migration {
     return MigrationStrategy(
+      onUpgrade: (migrator, from, to) async {
+        if (from < 2) {
+          // Na versão 1 as atividades não tinham dono. Como o app ainda não foi
+          // publicado, esses registros de teste são descartados.
+          await migrator.drop(trackPointRecords);
+          await migrator.drop(activityRecords);
+          await migrator.createAll();
+        }
+      },
       beforeOpen: (details) async {
         await customStatement('PRAGMA foreign_keys = ON');
       },

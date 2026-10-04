@@ -1,20 +1,31 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:runmares/features/auth/data/auth_repository_provider.dart';
+import 'package:runmares/features/auth/domain/auth_user.dart';
 import 'package:runmares/features/history/data/activity_repository_provider.dart';
 import 'package:runmares/features/history/domain/activity_summary.dart';
 import 'package:runmares/features/history/presentation/pages/history_page.dart';
 import 'package:runmares/features/recording/domain/activity_type.dart';
 
+import '../auth/fakes/fake_auth_repository.dart';
 import '../recording/fakes/fake_activity_repository.dart';
 
 Future<void> _pumpPage(
   WidgetTester tester,
   FakeActivityRepository repository,
 ) async {
+  final auth = FakeAuthRepository(
+    initialUser: const AuthUser(uid: 'user-1', email: 'ana@exemplo.com'),
+  );
+  addTearDown(auth.dispose);
+
   await tester.pumpWidget(
     ProviderScope(
-      overrides: [activityRepositoryProvider.overrideWithValue(repository)],
+      overrides: [
+        activityRepositoryProvider.overrideWithValue(repository),
+        authRepositoryProvider.overrideWithValue(auth),
+      ],
       child: const MaterialApp(home: HistoryPage()),
     ),
   );
@@ -47,5 +58,31 @@ void main() {
 
     expect(find.text('Corrida · 03/10/2026 08:00'), findsOneWidget);
     expect(find.text('5,23 km · 32:10'), findsOneWidget);
+  });
+
+  testWidgets('shows whether each activity was synced', (tester) async {
+    final repository = FakeActivityRepository();
+    repository.summaries.addAll([
+      ActivitySummary(
+        id: 1,
+        type: ActivityType.running,
+        startedAt: DateTime(2026, 10, 3, 8),
+        duration: const Duration(minutes: 30),
+        distanceMeters: 5000,
+        isSynced: true,
+      ),
+      ActivitySummary(
+        id: 2,
+        type: ActivityType.walking,
+        startedAt: DateTime(2026, 10, 2, 8),
+        duration: const Duration(minutes: 20),
+        distanceMeters: 2000,
+      ),
+    ]);
+
+    await _pumpPage(tester, repository);
+
+    expect(find.byIcon(Icons.cloud_done_outlined), findsOneWidget);
+    expect(find.byIcon(Icons.cloud_upload_outlined), findsOneWidget);
   });
 }

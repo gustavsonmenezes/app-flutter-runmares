@@ -7,6 +7,7 @@ class ActivitySummary {
     required this.startedAt,
     required this.duration,
     required this.distanceMeters,
+    this.isSynced = false,
   });
 
   final int id;
@@ -14,4 +15,5 @@ class ActivitySummary {
   final DateTime startedAt;
   final Duration duration;
   final double distanceMeters;
+  final bool isSynced;
 }

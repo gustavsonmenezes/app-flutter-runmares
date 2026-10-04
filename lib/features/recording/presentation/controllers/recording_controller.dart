@@ -1,6 +1,8 @@
 import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:runmares/features/sync/presentation/providers/sync_providers.dart';
+import 'package:runmares/features/auth/data/auth_repository_provider.dart';
 import 'package:runmares/features/history/data/activity_repository_provider.dart';
 import 'package:runmares/features/history/domain/recorded_activity.dart';
 import 'package:runmares/features/recording/data/location_service.dart';
@@ -113,7 +115,14 @@ class RecordingController extends Notifier<RecordingState> {
     final segments = _tracker.segments;
     if (startedAt == null || segments.isEmpty) return;
 
+    final userId = ref.read(authRepositoryProvider).currentUser?.uid;
+    if (userId == null) {
+      state = state.copyWith(saveStatus: ActivitySaveStatus.failed);
+      return;
+    }
+
     final activity = RecordedActivity(
+      userId: userId,
       type: state.activityType,
       startedAt: startedAt,
       duration: state.elapsed,
@@ -125,9 +134,15 @@ class RecordingController extends Notifier<RecordingState> {
     try {
       await ref.read(activityRepositoryProvider).save(activity);
       _updateSaveStatus(ActivitySaveStatus.saved);
+      _syncInBackground(userId);
     } on Exception {
       _updateSaveStatus(ActivitySaveStatus.failed);
     }
+  }
+
+  void _syncInBackground(String userId) {
+    if (_isDisposed) return;
+    unawaited(ref.read(activitySyncServiceProvider).syncPending(userId));
   }
 
   // Ignora o resultado se a tela já foi reiniciada ou descartada durante o

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:runmares/features/auth/data/auth_repository_provider.dart';
+import 'package:runmares/features/auth/domain/auth_user.dart';
 import 'package:runmares/features/history/data/activity_repository_provider.dart';
 import 'package:runmares/features/history/domain/activity_details.dart';
 import 'package:runmares/features/history/domain/activity_summary.dart';
@@ -8,6 +10,7 @@ import 'package:runmares/features/history/presentation/pages/activity_details_pa
 import 'package:runmares/features/recording/domain/activity_type.dart';
 import 'package:runmares/features/recording/domain/track_point.dart';
 
+import '../auth/fakes/fake_auth_repository.dart';
 import '../recording/fakes/fake_activity_repository.dart';
 
 TrackPoint _point(double latitude, int seconds) {
@@ -24,9 +27,17 @@ Future<void> _pumpPage(
   FakeActivityRepository repository,
   String activityId,
 ) async {
+  final auth = FakeAuthRepository(
+    initialUser: const AuthUser(uid: 'user-1', email: 'ana@exemplo.com'),
+  );
+  addTearDown(auth.dispose);
+
   await tester.pumpWidget(
     ProviderScope(
-      overrides: [activityRepositoryProvider.overrideWithValue(repository)],
+      overrides: [
+        activityRepositoryProvider.overrideWithValue(repository),
+        authRepositoryProvider.overrideWithValue(auth),
+      ],
       child: MaterialApp(home: ActivityDetailsPage(activityId: activityId)),
     ),
   );

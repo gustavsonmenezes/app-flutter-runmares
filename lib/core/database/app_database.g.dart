@@ -22,6 +22,15 @@ class $ActivityRecordsTable extends ActivityRecords
       'PRIMARY KEY AUTOINCREMENT',
     ),
   );
+  static const VerificationMeta _userIdMeta = const VerificationMeta('userId');
+  @override
+  late final GeneratedColumn<String> userId = GeneratedColumn<String>(
+    'user_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
   @override
   late final GeneratedColumnWithTypeConverter<ActivityType, String> type =
       GeneratedColumn<String>(
@@ -64,13 +73,26 @@ class $ActivityRecordsTable extends ActivityRecords
     type: DriftSqlType.double,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _syncedAtMeta = const VerificationMeta(
+    'syncedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> syncedAt = GeneratedColumn<DateTime>(
+    'synced_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
+    userId,
     type,
     startedAt,
     durationSeconds,
     distanceMeters,
+    syncedAt,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -86,6 +108,14 @@ class $ActivityRecordsTable extends ActivityRecords
     final data = instance.toColumns(true);
     if (data.containsKey('id')) {
       context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('user_id')) {
+      context.handle(
+        _userIdMeta,
+        userId.isAcceptableOrUnknown(data['user_id']!, _userIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_userIdMeta);
     }
     if (data.containsKey('started_at')) {
       context.handle(
@@ -117,6 +147,12 @@ class $ActivityRecordsTable extends ActivityRecords
     } else if (isInserting) {
       context.missing(_distanceMetersMeta);
     }
+    if (data.containsKey('synced_at')) {
+      context.handle(
+        _syncedAtMeta,
+        syncedAt.isAcceptableOrUnknown(data['synced_at']!, _syncedAtMeta),
+      );
+    }
     return context;
   }
 
@@ -129,6 +165,10 @@ class $ActivityRecordsTable extends ActivityRecords
       id: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}id'],
+      )!,
+      userId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}user_id'],
       )!,
       type: $ActivityRecordsTable.$convertertype.fromSql(
         attachedDatabase.typeMapping.read(
@@ -148,6 +188,10 @@ class $ActivityRecordsTable extends ActivityRecords
         DriftSqlType.double,
         data['${effectivePrefix}distance_meters'],
       )!,
+      syncedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}synced_at'],
+      ),
     );
   }
 
@@ -162,21 +206,26 @@ class $ActivityRecordsTable extends ActivityRecords
 
 class ActivityRecord extends DataClass implements Insertable<ActivityRecord> {
   final int id;
+  final String userId;
   final ActivityType type;
   final DateTime startedAt;
   final int durationSeconds;
   final double distanceMeters;
+  final DateTime? syncedAt;
   const ActivityRecord({
     required this.id,
+    required this.userId,
     required this.type,
     required this.startedAt,
     required this.durationSeconds,
     required this.distanceMeters,
+    this.syncedAt,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
     map['id'] = Variable<int>(id);
+    map['user_id'] = Variable<String>(userId);
     {
       map['type'] = Variable<String>(
         $ActivityRecordsTable.$convertertype.toSql(type),
@@ -185,16 +234,23 @@ class ActivityRecord extends DataClass implements Insertable<ActivityRecord> {
     map['started_at'] = Variable<DateTime>(startedAt);
     map['duration_seconds'] = Variable<int>(durationSeconds);
     map['distance_meters'] = Variable<double>(distanceMeters);
+    if (!nullToAbsent || syncedAt != null) {
+      map['synced_at'] = Variable<DateTime>(syncedAt);
+    }
     return map;
   }
 
   ActivityRecordsCompanion toCompanion(bool nullToAbsent) {
     return ActivityRecordsCompanion(
       id: Value(id),
+      userId: Value(userId),
       type: Value(type),
       startedAt: Value(startedAt),
       durationSeconds: Value(durationSeconds),
       distanceMeters: Value(distanceMeters),
+      syncedAt: syncedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(syncedAt),
     );
   }
 
@@ -205,12 +261,14 @@ class ActivityRecord extends DataClass implements Insertable<ActivityRecord> {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return ActivityRecord(
       id: serializer.fromJson<int>(json['id']),
+      userId: serializer.fromJson<String>(json['userId']),
       type: $ActivityRecordsTable.$convertertype.fromJson(
         serializer.fromJson<String>(json['type']),
       ),
       startedAt: serializer.fromJson<DateTime>(json['startedAt']),
       durationSeconds: serializer.fromJson<int>(json['durationSeconds']),
       distanceMeters: serializer.fromJson<double>(json['distanceMeters']),
+      syncedAt: serializer.fromJson<DateTime?>(json['syncedAt']),
     );
   }
   @override
@@ -218,31 +276,38 @@ class ActivityRecord extends DataClass implements Insertable<ActivityRecord> {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return <String, dynamic>{
       'id': serializer.toJson<int>(id),
+      'userId': serializer.toJson<String>(userId),
       'type': serializer.toJson<String>(
         $ActivityRecordsTable.$convertertype.toJson(type),
       ),
       'startedAt': serializer.toJson<DateTime>(startedAt),
       'durationSeconds': serializer.toJson<int>(durationSeconds),
       'distanceMeters': serializer.toJson<double>(distanceMeters),
+      'syncedAt': serializer.toJson<DateTime?>(syncedAt),
     };
   }
 
   ActivityRecord copyWith({
     int? id,
+    String? userId,
     ActivityType? type,
     DateTime? startedAt,
     int? durationSeconds,
     double? distanceMeters,
+    Value<DateTime?> syncedAt = const Value.absent(),
   }) => ActivityRecord(
     id: id ?? this.id,
+    userId: userId ?? this.userId,
     type: type ?? this.type,
     startedAt: startedAt ?? this.startedAt,
     durationSeconds: durationSeconds ?? this.durationSeconds,
     distanceMeters: distanceMeters ?? this.distanceMeters,
+    syncedAt: syncedAt.present ? syncedAt.value : this.syncedAt,
   );
   ActivityRecord copyWithCompanion(ActivityRecordsCompanion data) {
     return ActivityRecord(
       id: data.id.present ? data.id.value : this.id,
+      userId: data.userId.present ? data.userId.value : this.userId,
       type: data.type.present ? data.type.value : this.type,
       startedAt: data.startedAt.present ? data.startedAt.value : this.startedAt,
       durationSeconds: data.durationSeconds.present
@@ -251,6 +316,7 @@ class ActivityRecord extends DataClass implements Insertable<ActivityRecord> {
       distanceMeters: data.distanceMeters.present
           ? data.distanceMeters.value
           : this.distanceMeters,
+      syncedAt: data.syncedAt.present ? data.syncedAt.value : this.syncedAt,
     );
   }
 
@@ -258,80 +324,106 @@ class ActivityRecord extends DataClass implements Insertable<ActivityRecord> {
   String toString() {
     return (StringBuffer('ActivityRecord(')
           ..write('id: $id, ')
+          ..write('userId: $userId, ')
           ..write('type: $type, ')
           ..write('startedAt: $startedAt, ')
           ..write('durationSeconds: $durationSeconds, ')
-          ..write('distanceMeters: $distanceMeters')
+          ..write('distanceMeters: $distanceMeters, ')
+          ..write('syncedAt: $syncedAt')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode =>
-      Object.hash(id, type, startedAt, durationSeconds, distanceMeters);
+  int get hashCode => Object.hash(
+    id,
+    userId,
+    type,
+    startedAt,
+    durationSeconds,
+    distanceMeters,
+    syncedAt,
+  );
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       (other is ActivityRecord &&
           other.id == this.id &&
+          other.userId == this.userId &&
           other.type == this.type &&
           other.startedAt == this.startedAt &&
           other.durationSeconds == this.durationSeconds &&
-          other.distanceMeters == this.distanceMeters);
+          other.distanceMeters == this.distanceMeters &&
+          other.syncedAt == this.syncedAt);
 }
 
 class ActivityRecordsCompanion extends UpdateCompanion<ActivityRecord> {
   final Value<int> id;
+  final Value<String> userId;
   final Value<ActivityType> type;
   final Value<DateTime> startedAt;
   final Value<int> durationSeconds;
   final Value<double> distanceMeters;
+  final Value<DateTime?> syncedAt;
   const ActivityRecordsCompanion({
     this.id = const Value.absent(),
+    this.userId = const Value.absent(),
     this.type = const Value.absent(),
     this.startedAt = const Value.absent(),
     this.durationSeconds = const Value.absent(),
     this.distanceMeters = const Value.absent(),
+    this.syncedAt = const Value.absent(),
   });
   ActivityRecordsCompanion.insert({
     this.id = const Value.absent(),
+    required String userId,
     required ActivityType type,
     required DateTime startedAt,
     required int durationSeconds,
     required double distanceMeters,
-  }) : type = Value(type),
+    this.syncedAt = const Value.absent(),
+  }) : userId = Value(userId),
+       type = Value(type),
        startedAt = Value(startedAt),
        durationSeconds = Value(durationSeconds),
        distanceMeters = Value(distanceMeters);
   static Insertable<ActivityRecord> custom({
     Expression<int>? id,
+    Expression<String>? userId,
     Expression<String>? type,
     Expression<DateTime>? startedAt,
     Expression<int>? durationSeconds,
     Expression<double>? distanceMeters,
+    Expression<DateTime>? syncedAt,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
+      if (userId != null) 'user_id': userId,
       if (type != null) 'type': type,
       if (startedAt != null) 'started_at': startedAt,
       if (durationSeconds != null) 'duration_seconds': durationSeconds,
       if (distanceMeters != null) 'distance_meters': distanceMeters,
+      if (syncedAt != null) 'synced_at': syncedAt,
     });
   }
 
   ActivityRecordsCompanion copyWith({
     Value<int>? id,
+    Value<String>? userId,
     Value<ActivityType>? type,
     Value<DateTime>? startedAt,
     Value<int>? durationSeconds,
     Value<double>? distanceMeters,
+    Value<DateTime?>? syncedAt,
   }) {
     return ActivityRecordsCompanion(
       id: id ?? this.id,
+      userId: userId ?? this.userId,
       type: type ?? this.type,
       startedAt: startedAt ?? this.startedAt,
       durationSeconds: durationSeconds ?? this.durationSeconds,
       distanceMeters: distanceMeters ?? this.distanceMeters,
+      syncedAt: syncedAt ?? this.syncedAt,
     );
   }
 
@@ -340,6 +432,9 @@ class ActivityRecordsCompanion extends UpdateCompanion<ActivityRecord> {
     final map = <String, Expression>{};
     if (id.present) {
       map['id'] = Variable<int>(id.value);
+    }
+    if (userId.present) {
+      map['user_id'] = Variable<String>(userId.value);
     }
     if (type.present) {
       map['type'] = Variable<String>(
@@ -355,6 +450,9 @@ class ActivityRecordsCompanion extends UpdateCompanion<ActivityRecord> {
     if (distanceMeters.present) {
       map['distance_meters'] = Variable<double>(distanceMeters.value);
     }
+    if (syncedAt.present) {
+      map['synced_at'] = Variable<DateTime>(syncedAt.value);
+    }
     return map;
   }
 
@@ -362,10 +460,12 @@ class ActivityRecordsCompanion extends UpdateCompanion<ActivityRecord> {
   String toString() {
     return (StringBuffer('ActivityRecordsCompanion(')
           ..write('id: $id, ')
+          ..write('userId: $userId, ')
           ..write('type: $type, ')
           ..write('startedAt: $startedAt, ')
           ..write('durationSeconds: $durationSeconds, ')
-          ..write('distanceMeters: $distanceMeters')
+          ..write('distanceMeters: $distanceMeters, ')
+          ..write('syncedAt: $syncedAt')
           ..write(')'))
         .toString();
   }
@@ -874,18 +974,22 @@ abstract class _$AppDatabase extends GeneratedDatabase {
 typedef $$ActivityRecordsTableCreateCompanionBuilder =
     ActivityRecordsCompanion Function({
       Value<int> id,
+      required String userId,
       required ActivityType type,
       required DateTime startedAt,
       required int durationSeconds,
       required double distanceMeters,
+      Value<DateTime?> syncedAt,
     });
 typedef $$ActivityRecordsTableUpdateCompanionBuilder =
     ActivityRecordsCompanion Function({
       Value<int> id,
+      Value<String> userId,
       Value<ActivityType> type,
       Value<DateTime> startedAt,
       Value<int> durationSeconds,
       Value<double> distanceMeters,
+      Value<DateTime?> syncedAt,
     });
 
 final class $$ActivityRecordsTableReferences
@@ -933,6 +1037,11 @@ class $$ActivityRecordsTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
+  ColumnFilters<String> get userId => $composableBuilder(
+    column: $table.userId,
+    builder: (column) => ColumnFilters(column),
+  );
+
   ColumnWithTypeConverterFilters<ActivityType, ActivityType, String> get type =>
       $composableBuilder(
         column: $table.type,
@@ -951,6 +1060,11 @@ class $$ActivityRecordsTableFilterComposer
 
   ColumnFilters<double> get distanceMeters => $composableBuilder(
     column: $table.distanceMeters,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get syncedAt => $composableBuilder(
+    column: $table.syncedAt,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -994,6 +1108,11 @@ class $$ActivityRecordsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get userId => $composableBuilder(
+    column: $table.userId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<String> get type => $composableBuilder(
     column: $table.type,
     builder: (column) => ColumnOrderings(column),
@@ -1013,6 +1132,11 @@ class $$ActivityRecordsTableOrderingComposer
     column: $table.distanceMeters,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<DateTime> get syncedAt => $composableBuilder(
+    column: $table.syncedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$ActivityRecordsTableAnnotationComposer
@@ -1026,6 +1150,9 @@ class $$ActivityRecordsTableAnnotationComposer
   });
   GeneratedColumn<int> get id =>
       $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get userId =>
+      $composableBuilder(column: $table.userId, builder: (column) => column);
 
   GeneratedColumnWithTypeConverter<ActivityType, String> get type =>
       $composableBuilder(column: $table.type, builder: (column) => column);
@@ -1042,6 +1169,9 @@ class $$ActivityRecordsTableAnnotationComposer
     column: $table.distanceMeters,
     builder: (column) => column,
   );
+
+  GeneratedColumn<DateTime> get syncedAt =>
+      $composableBuilder(column: $table.syncedAt, builder: (column) => column);
 
   Expression<T> trackPointRecordsRefs<T extends Object>(
     Expression<T> Function($$TrackPointRecordsTableAnnotationComposer a) f,
@@ -1101,30 +1231,38 @@ class $$ActivityRecordsTableTableManager
           updateCompanionCallback:
               ({
                 Value<int> id = const Value.absent(),
+                Value<String> userId = const Value.absent(),
                 Value<ActivityType> type = const Value.absent(),
                 Value<DateTime> startedAt = const Value.absent(),
                 Value<int> durationSeconds = const Value.absent(),
                 Value<double> distanceMeters = const Value.absent(),
+                Value<DateTime?> syncedAt = const Value.absent(),
               }) => ActivityRecordsCompanion(
                 id: id,
+                userId: userId,
                 type: type,
                 startedAt: startedAt,
                 durationSeconds: durationSeconds,
                 distanceMeters: distanceMeters,
+                syncedAt: syncedAt,
               ),
           createCompanionCallback:
               ({
                 Value<int> id = const Value.absent(),
+                required String userId,
                 required ActivityType type,
                 required DateTime startedAt,
                 required int durationSeconds,
                 required double distanceMeters,
+                Value<DateTime?> syncedAt = const Value.absent(),
               }) => ActivityRecordsCompanion.insert(
                 id: id,
+                userId: userId,
                 type: type,
                 startedAt: startedAt,
                 durationSeconds: durationSeconds,
                 distanceMeters: distanceMeters,
+                syncedAt: syncedAt,
               ),
           withReferenceMapper: (p0) => p0
               .map(

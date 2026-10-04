@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:runmares/features/auth/data/auth_repository_provider.dart';
+import 'package:runmares/features/auth/domain/auth_user.dart';
 import 'package:runmares/features/history/data/activity_repository_provider.dart';
 import 'package:runmares/features/recording/presentation/controllers/recording_controller.dart';
 import 'package:runmares/features/recording/presentation/pages/recording_page.dart';
 
+import '../auth/fakes/fake_auth_repository.dart';
 import 'fakes/fake_activity_repository.dart';
 import 'fakes/fake_location_service.dart';
 
@@ -12,6 +15,11 @@ void main() {
   testWidgets('asks for confirmation before finishing the activity', (
     tester,
   ) async {
+    final auth = FakeAuthRepository(
+      initialUser: const AuthUser(uid: 'user-1', email: 'ana@exemplo.com'),
+    );
+    addTearDown(auth.dispose);
+
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
@@ -21,6 +29,7 @@ void main() {
           activityRepositoryProvider.overrideWithValue(
             FakeActivityRepository(),
           ),
+          authRepositoryProvider.overrideWithValue(auth),
         ],
         child: const MaterialApp(home: RecordingPage()),
       ),

@@ -2,6 +2,8 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:runmares/features/auth/data/auth_repository_provider.dart';
+import 'package:runmares/features/auth/domain/auth_user.dart';
 import 'package:runmares/features/history/data/activity_repository_provider.dart';
 import 'package:runmares/features/recording/domain/activity_save_status.dart';
 import 'package:runmares/features/recording/domain/activity_type.dart';
@@ -10,7 +12,9 @@ import 'package:runmares/features/recording/domain/recording_status.dart';
 import 'package:runmares/features/recording/domain/track_point.dart';
 import 'package:runmares/features/recording/presentation/controllers/recording_controller.dart';
 import 'package:runmares/features/recording/presentation/controllers/recording_state.dart';
-
+import '../sync/fakes/fake_remote_activity_store.dart';
+import 'package:runmares/features/sync/data/remote_activity_store_provider.dart';
+import '../auth/fakes/fake_auth_repository.dart';
 import 'fakes/fake_activity_repository.dart';
 import 'fakes/fake_location_service.dart';
 
@@ -26,6 +30,7 @@ TrackPoint _point(double latitude, int seconds) {
 void main() {
   late StreamController<TrackPoint> locationUpdates;
   late FakeActivityRepository repository;
+  late FakeAuthRepository authRepository;
   late ProviderContainer container;
   late RecordingController controller;
 
@@ -36,6 +41,10 @@ void main() {
       overrides: [
         locationServiceProvider.overrideWithValue(service),
         activityRepositoryProvider.overrideWithValue(repository),
+        authRepositoryProvider.overrideWithValue(authRepository),
+        remoteActivityStoreProvider.overrideWithValue(
+          FakeRemoteActivityStore(),
+        ),
       ],
     );
   }
@@ -43,6 +52,9 @@ void main() {
   setUp(() {
     locationUpdates = StreamController<TrackPoint>.broadcast();
     repository = FakeActivityRepository();
+    authRepository = FakeAuthRepository(
+      initialUser: const AuthUser(uid: 'user-1', email: 'ana@exemplo.com'),
+    );
     container = containerWith(FakeLocationService(locationUpdates.stream));
     controller = container.read(recordingControllerProvider.notifier);
   });
@@ -50,6 +62,7 @@ void main() {
   tearDown(() {
     container.dispose();
     locationUpdates.close();
+    authRepository.dispose();
   });
 
   test('starts idle', () {
@@ -143,7 +156,7 @@ void main() {
     expect(currentState().routeSegments, hasLength(2));
   });
 
-  test('saves the finished activity with its route', () async {
+  test('saves the finished activity for the logged user', () async {
     controller.selectActivityType(ActivityType.walking);
     controller.start();
     locationUpdates.add(_point(0, 0));
@@ -153,6 +166,7 @@ void main() {
     await controller.finish();
 
     expect(repository.saved, hasLength(1));
+    expect(repository.saved.single.userId, 'user-1');
     expect(repository.saved.single.type, ActivityType.walking);
     expect(repository.saved.single.distanceMeters, closeTo(111.2, 0.5));
     expect(repository.saved.single.segments.single, hasLength(2));
@@ -177,6 +191,18 @@ void main() {
     await controller.finish();
 
     expect(currentState().status, RecordingStatus.finished);
+    expect(currentState().saveStatus, ActivitySaveStatus.failed);
+  });
+
+  test('does not save when nobody is logged in', () async {
+    await authRepository.signOut();
+    controller.start();
+    locationUpdates.add(_point(0, 0));
+    await pumpEventQueue();
+
+    await controller.finish();
+
+    expect(repository.saved, isEmpty);
     expect(currentState().saveStatus, ActivitySaveStatus.failed);
   });
 
