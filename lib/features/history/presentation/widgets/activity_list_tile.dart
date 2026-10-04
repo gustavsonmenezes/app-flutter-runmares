@@ -27,7 +27,20 @@ class ActivityListTile extends StatelessWidget {
         '${MetricFormatters.dateTime(summary.startedAt)}',
       ),
       subtitle: Text('$distance km · $duration'),
-      trailing: const Icon(Icons.chevron_right),
+      trailing: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            summary.isSynced
+                ? Icons.cloud_done_outlined
+                : Icons.cloud_upload_outlined,
+            semanticLabel: summary.isSynced
+                ? 'Sincronizada'
+                : 'Pendente de sincronização',
+          ),
+          const Icon(Icons.chevron_right),
+        ],
+      ),
       onTap: onTap,
     );
   }

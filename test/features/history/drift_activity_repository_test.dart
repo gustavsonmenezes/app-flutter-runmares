@@ -110,4 +110,43 @@ void main() {
 
     expect(await repository.findDetails(id, userId: _bruno), isNull);
   });
+
+  test('lists only the activities that were not synced yet', () async {
+    final syncedId = await repository.save(
+      _activity(startedAt: DateTime(2026, 10, 1)),
+    );
+    await repository.save(_activity(startedAt: DateTime(2026, 10, 2)));
+    await repository.markSynced(syncedId, DateTime(2026, 10, 5));
+
+    final pending = await repository.findPending(_ana);
+
+    expect(pending, hasLength(1));
+    expect(pending.single.activity.startedAt, DateTime(2026, 10, 2));
+  });
+
+  test('pending activities carry their route and owner', () async {
+    await repository.save(_activity());
+
+    final pending = await repository.findPending(_ana);
+
+    expect(pending.single.activity.userId, _ana);
+    expect(pending.single.activity.segments, hasLength(2));
+  });
+
+  test('does not list the pending activities of another user', () async {
+    await repository.save(_activity());
+
+    expect(await repository.findPending(_bruno), isEmpty);
+  });
+
+  test('shows the synced state in the summaries', () async {
+    final id = await repository.save(_activity());
+    final before = await repository.watchSummaries(_ana).first;
+    expect(before.single.isSynced, isFalse);
+
+    await repository.markSynced(id, DateTime(2026, 10, 5));
+
+    final after = await repository.watchSummaries(_ana).first;
+    expect(after.single.isSynced, isTrue);
+  });
 }

@@ -59,4 +59,30 @@ void main() {
     expect(find.text('Corrida · 03/10/2026 08:00'), findsOneWidget);
     expect(find.text('5,23 km · 32:10'), findsOneWidget);
   });
+
+  testWidgets('shows whether each activity was synced', (tester) async {
+    final repository = FakeActivityRepository();
+    repository.summaries.addAll([
+      ActivitySummary(
+        id: 1,
+        type: ActivityType.running,
+        startedAt: DateTime(2026, 10, 3, 8),
+        duration: const Duration(minutes: 30),
+        distanceMeters: 5000,
+        isSynced: true,
+      ),
+      ActivitySummary(
+        id: 2,
+        type: ActivityType.walking,
+        startedAt: DateTime(2026, 10, 2, 8),
+        duration: const Duration(minutes: 20),
+        distanceMeters: 2000,
+      ),
+    ]);
+
+    await _pumpPage(tester, repository);
+
+    expect(find.byIcon(Icons.cloud_done_outlined), findsOneWidget);
+    expect(find.byIcon(Icons.cloud_upload_outlined), findsOneWidget);
+  });
 }

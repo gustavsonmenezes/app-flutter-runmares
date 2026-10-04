@@ -3,6 +3,7 @@ import 'package:runmares/core/database/app_database.dart';
 import 'package:runmares/features/history/domain/activity_details.dart';
 import 'package:runmares/features/history/domain/activity_repository.dart';
 import 'package:runmares/features/history/domain/activity_summary.dart';
+import 'package:runmares/features/history/domain/pending_activity.dart';
 import 'package:runmares/features/history/domain/recorded_activity.dart';
 import 'package:runmares/features/recording/domain/track_point.dart';
 
@@ -63,30 +64,57 @@ class DriftActivityRepository implements ActivityRepository {
             .getSingleOrNull();
     if (record == null) return null;
 
+    return ActivityDetails(
+      summary: _toSummary(record),
+      segments: await _loadSegments(id),
+    );
+  }
+
+  @override
+  Future<List<PendingActivity>> findPending(String userId) async {
+    final records =
+        await (_database.select(_database.activityRecords)
+              ..where(
+                (table) =>
+                    table.userId.equals(userId) & table.syncedAt.isNull(),
+              )
+              ..orderBy([(table) => OrderingTerm.asc(table.startedAt)]))
+            .get();
+
+    final pending = <PendingActivity>[];
+    for (final record in records) {
+      pending.add(
+        PendingActivity(
+          id: record.id,
+          activity: RecordedActivity(
+            userId: record.userId,
+            type: record.type,
+            startedAt: record.startedAt,
+            duration: Duration(seconds: record.durationSeconds),
+            distanceMeters: record.distanceMeters,
+            segments: await _loadSegments(record.id),
+          ),
+        ),
+      );
+    }
+    return pending;
+  }
+
+  @override
+  Future<void> markSynced(int id, DateTime syncedAt) async {
+    await (_database.update(_database.activityRecords)
+          ..where((table) => table.id.equals(id)))
+        .write(ActivityRecordsCompanion(syncedAt: Value(syncedAt)));
+  }
+
+  Future<List<List<TrackPoint>>> _loadSegments(int activityId) async {
     // Os pontos foram gravados em ordem, então o id preserva a sequência.
-    final pointRows =
+    final rows =
         await (_database.select(_database.trackPointRecords)
-              ..where((table) => table.activityId.equals(id))
+              ..where((table) => table.activityId.equals(activityId))
               ..orderBy([(table) => OrderingTerm.asc(table.id)]))
             .get();
 
-    return ActivityDetails(
-      summary: _toSummary(record),
-      segments: _groupBySegment(pointRows),
-    );
-  }
-
-  ActivitySummary _toSummary(ActivityRecord record) {
-    return ActivitySummary(
-      id: record.id,
-      type: record.type,
-      startedAt: record.startedAt,
-      duration: Duration(seconds: record.durationSeconds),
-      distanceMeters: record.distanceMeters,
-    );
-  }
-
-  List<List<TrackPoint>> _groupBySegment(List<TrackPointRecord> rows) {
     final segments = <int, List<TrackPoint>>{};
     for (final row in rows) {
       segments
@@ -101,5 +129,16 @@ class DriftActivityRepository implements ActivityRepository {
           );
     }
     return segments.values.toList();
+  }
+
+  ActivitySummary _toSummary(ActivityRecord record) {
+    return ActivitySummary(
+      id: record.id,
+      type: record.type,
+      startedAt: record.startedAt,
+      duration: Duration(seconds: record.durationSeconds),
+      distanceMeters: record.distanceMeters,
+      isSynced: record.syncedAt != null,
+    );
   }
 }

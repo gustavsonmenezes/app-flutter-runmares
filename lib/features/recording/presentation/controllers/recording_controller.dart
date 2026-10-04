@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:runmares/features/sync/presentation/providers/sync_providers.dart';
 import 'package:runmares/features/auth/data/auth_repository_provider.dart';
 import 'package:runmares/features/history/data/activity_repository_provider.dart';
 import 'package:runmares/features/history/domain/recorded_activity.dart';
@@ -133,9 +134,15 @@ class RecordingController extends Notifier<RecordingState> {
     try {
       await ref.read(activityRepositoryProvider).save(activity);
       _updateSaveStatus(ActivitySaveStatus.saved);
+      _syncInBackground(userId);
     } on Exception {
       _updateSaveStatus(ActivitySaveStatus.failed);
     }
+  }
+
+  void _syncInBackground(String userId) {
+    if (_isDisposed) return;
+    unawaited(ref.read(activitySyncServiceProvider).syncPending(userId));
   }
 
   // Ignora o resultado se a tela já foi reiniciada ou descartada durante o

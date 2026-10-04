@@ -1,5 +1,6 @@
 import 'package:runmares/features/history/domain/activity_details.dart';
 import 'package:runmares/features/history/domain/activity_summary.dart';
+import 'package:runmares/features/history/domain/pending_activity.dart';
 import 'package:runmares/features/history/domain/recorded_activity.dart';
 
 abstract interface class ActivityRepository {
@@ -8,4 +9,8 @@ abstract interface class ActivityRepository {
   Stream<List<ActivitySummary>> watchSummaries(String userId);
 
   Future<ActivityDetails?> findDetails(int id, {required String userId});
+
+  Future<List<PendingActivity>> findPending(String userId);
+
+  Future<void> markSynced(int id, DateTime syncedAt);
 }

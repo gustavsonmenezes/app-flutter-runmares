@@ -12,7 +12,8 @@ import 'package:runmares/features/recording/domain/recording_status.dart';
 import 'package:runmares/features/recording/domain/track_point.dart';
 import 'package:runmares/features/recording/presentation/controllers/recording_controller.dart';
 import 'package:runmares/features/recording/presentation/controllers/recording_state.dart';
-
+import '../sync/fakes/fake_remote_activity_store.dart';
+import 'package:runmares/features/sync/data/remote_activity_store_provider.dart';
 import '../auth/fakes/fake_auth_repository.dart';
 import 'fakes/fake_activity_repository.dart';
 import 'fakes/fake_location_service.dart';
@@ -41,6 +42,9 @@ void main() {
         locationServiceProvider.overrideWithValue(service),
         activityRepositoryProvider.overrideWithValue(repository),
         authRepositoryProvider.overrideWithValue(authRepository),
+        remoteActivityStoreProvider.overrideWithValue(
+          FakeRemoteActivityStore(),
+        ),
       ],
     );
   }
