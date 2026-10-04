@@ -1,11 +1,11 @@
 import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:runmares/features/sync/presentation/providers/sync_providers.dart';
 import 'package:runmares/features/auth/data/auth_repository_provider.dart';
 import 'package:runmares/features/history/data/activity_repository_provider.dart';
 import 'package:runmares/features/history/domain/recorded_activity.dart';
 import 'package:runmares/features/recording/data/location_service.dart';
+import 'package:runmares/features/recording/data/recording_draft_repository_provider.dart';
 import 'package:runmares/features/recording/domain/activity_save_status.dart';
 import 'package:runmares/features/recording/domain/activity_timer.dart';
 import 'package:runmares/features/recording/domain/activity_type.dart';
@@ -14,6 +14,7 @@ import 'package:runmares/features/recording/domain/location_failure.dart';
 import 'package:runmares/features/recording/domain/recording_status.dart';
 import 'package:runmares/features/recording/domain/track_point.dart';
 import 'package:runmares/features/recording/presentation/controllers/recording_state.dart';
+import 'package:runmares/features/sync/presentation/providers/sync_providers.dart';
 
 final locationServiceProvider = Provider<LocationService>(
   (ref) => LocationService(),
@@ -32,6 +33,8 @@ class RecordingController extends Notifier<RecordingState> {
   StreamSubscription<TrackPoint>? _subscription;
   Timer? _ticker;
   DateTime? _startedAt;
+  String? _draftUserId;
+  Future<void> _draftQueue = Future.value();
   bool _isDisposed = false;
 
   @override
@@ -56,7 +59,8 @@ class RecordingController extends Notifier<RecordingState> {
 
     _tracker.reset();
     _timer.reset();
-    _startedAt = DateTime.now();
+    final startedAt = DateTime.now();
+    _startedAt = startedAt;
     state = state.copyWith(
       status: RecordingStatus.recording,
       distanceMeters: 0,
@@ -65,6 +69,7 @@ class RecordingController extends Notifier<RecordingState> {
       saveStatus: ActivitySaveStatus.none,
       clearLocationFailure: true,
     );
+    _beginDraft(startedAt);
     _startTracking();
   }
 
@@ -113,7 +118,10 @@ class RecordingController extends Notifier<RecordingState> {
   Future<void> _saveActivity() async {
     final startedAt = _startedAt;
     final segments = _tracker.segments;
-    if (startedAt == null || segments.isEmpty) return;
+    if (startedAt == null || segments.isEmpty) {
+      _discardDraft();
+      return;
+    }
 
     final userId = ref.read(authRepositoryProvider).currentUser?.uid;
     if (userId == null) {
@@ -134,15 +142,12 @@ class RecordingController extends Notifier<RecordingState> {
     try {
       await ref.read(activityRepositoryProvider).save(activity);
       _updateSaveStatus(ActivitySaveStatus.saved);
+      // O rascunho só some depois que a atividade foi salva de verdade.
+      _discardDraft();
       _syncInBackground(userId);
     } on Exception {
       _updateSaveStatus(ActivitySaveStatus.failed);
     }
-  }
-
-  void _syncInBackground(String userId) {
-    if (_isDisposed) return;
-    unawaited(ref.read(activitySyncServiceProvider).syncPending(userId));
   }
 
   // Ignora o resultado se a tela já foi reiniciada ou descartada durante o
@@ -150,6 +155,54 @@ class RecordingController extends Notifier<RecordingState> {
   void _updateSaveStatus(ActivitySaveStatus status) {
     if (_isDisposed || state.status != RecordingStatus.finished) return;
     state = state.copyWith(saveStatus: status);
+  }
+
+  void _syncInBackground(String userId) {
+    if (_isDisposed) return;
+    unawaited(ref.read(activitySyncServiceProvider).syncPending(userId));
+  }
+
+  void _beginDraft(DateTime startedAt) {
+    final userId = ref.read(authRepositoryProvider).currentUser?.uid;
+    _draftUserId = userId;
+    if (userId == null) return;
+
+    final drafts = ref.read(recordingDraftRepositoryProvider);
+    final type = state.activityType;
+    _enqueueDraftWrite(
+      () => drafts.begin(userId: userId, type: type, startedAt: startedAt),
+    );
+  }
+
+  void _persistPoint(TrackPoint point) {
+    final userId = _draftUserId;
+    if (userId == null) return;
+
+    final drafts = ref.read(recordingDraftRepositoryProvider);
+    final segmentIndex = _tracker.segmentCount - 1;
+    final elapsed = _timer.elapsed;
+    _enqueueDraftWrite(
+      () => drafts.appendPoint(
+        userId: userId,
+        segmentIndex: segmentIndex,
+        point: point,
+        elapsed: elapsed,
+      ),
+    );
+  }
+
+  void _discardDraft() {
+    final userId = _draftUserId;
+    if (userId == null || _isDisposed) return;
+
+    final drafts = ref.read(recordingDraftRepositoryProvider);
+    _enqueueDraftWrite(() => drafts.discard(userId));
+  }
+
+  // As escritas do rascunho entram numa fila para manter a ordem dos pontos.
+  // Uma falha aqui não pode interromper a gravação em andamento.
+  void _enqueueDraftWrite(Future<void> Function() write) {
+    _draftQueue = _draftQueue.then((_) => write()).catchError((Object _) {});
   }
 
   void _startTracking() {
@@ -175,11 +228,12 @@ class RecordingController extends Notifier<RecordingState> {
   }
 
   void _onPoint(TrackPoint point) {
-    _tracker.add(point);
+    final accepted = _tracker.add(point);
     state = state.copyWith(
       distanceMeters: _tracker.totalMeters,
       routeSegments: _tracker.segments,
     );
+    if (accepted) _persistPoint(point);
   }
 
   void _onLocationError(Object error) {

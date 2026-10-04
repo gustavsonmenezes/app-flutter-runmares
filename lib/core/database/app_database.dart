@@ -1,12 +1,16 @@
 import 'package:drift/drift.dart';
 import 'package:drift_flutter/drift_flutter.dart';
 import 'package:runmares/core/database/tables/activity_records.dart';
+import 'package:runmares/core/database/tables/draft_points.dart';
+import 'package:runmares/core/database/tables/draft_sessions.dart';
 import 'package:runmares/core/database/tables/track_point_records.dart';
 import 'package:runmares/features/recording/domain/activity_type.dart';
 
 part 'app_database.g.dart';
 
-@DriftDatabase(tables: [ActivityRecords, TrackPointRecords])
+@DriftDatabase(
+  tables: [ActivityRecords, TrackPointRecords, DraftSessions, DraftPoints],
+)
 class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor])
     : super(executor ?? driftDatabase(name: _databaseName));
@@ -14,7 +18,7 @@ class AppDatabase extends _$AppDatabase {
   static const String _databaseName = 'runmares';
 
   @override
-  int get schemaVersion => 2;
+  int get schemaVersion => 3;
 
   @override
   MigrationStrategy get migration {
@@ -26,6 +30,9 @@ class AppDatabase extends _$AppDatabase {
           await migrator.drop(trackPointRecords);
           await migrator.drop(activityRecords);
           await migrator.createAll();
+        } else if (from < 3) {
+          await migrator.createTable(draftSessions);
+          await migrator.createTable(draftPoints);
         }
       },
       beforeOpen: (details) async {

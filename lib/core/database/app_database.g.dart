@@ -943,6 +943,799 @@ class TrackPointRecordsCompanion extends UpdateCompanion<TrackPointRecord> {
   }
 }
 
+class $DraftSessionsTable extends DraftSessions
+    with TableInfo<$DraftSessionsTable, DraftSession> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $DraftSessionsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _userIdMeta = const VerificationMeta('userId');
+  @override
+  late final GeneratedColumn<String> userId = GeneratedColumn<String>(
+    'user_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  @override
+  late final GeneratedColumnWithTypeConverter<ActivityType, String> type =
+      GeneratedColumn<String>(
+        'type',
+        aliasedName,
+        false,
+        type: DriftSqlType.string,
+        requiredDuringInsert: true,
+      ).withConverter<ActivityType>($DraftSessionsTable.$convertertype);
+  static const VerificationMeta _startedAtMeta = const VerificationMeta(
+    'startedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> startedAt = GeneratedColumn<DateTime>(
+    'started_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _elapsedSecondsMeta = const VerificationMeta(
+    'elapsedSeconds',
+  );
+  @override
+  late final GeneratedColumn<int> elapsedSeconds = GeneratedColumn<int>(
+    'elapsed_seconds',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    userId,
+    type,
+    startedAt,
+    elapsedSeconds,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'draft_sessions';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<DraftSession> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('user_id')) {
+      context.handle(
+        _userIdMeta,
+        userId.isAcceptableOrUnknown(data['user_id']!, _userIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_userIdMeta);
+    }
+    if (data.containsKey('started_at')) {
+      context.handle(
+        _startedAtMeta,
+        startedAt.isAcceptableOrUnknown(data['started_at']!, _startedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_startedAtMeta);
+    }
+    if (data.containsKey('elapsed_seconds')) {
+      context.handle(
+        _elapsedSecondsMeta,
+        elapsedSeconds.isAcceptableOrUnknown(
+          data['elapsed_seconds']!,
+          _elapsedSecondsMeta,
+        ),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {userId};
+  @override
+  DraftSession map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return DraftSession(
+      userId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}user_id'],
+      )!,
+      type: $DraftSessionsTable.$convertertype.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.string,
+          data['${effectivePrefix}type'],
+        )!,
+      ),
+      startedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}started_at'],
+      )!,
+      elapsedSeconds: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}elapsed_seconds'],
+      )!,
+    );
+  }
+
+  @override
+  $DraftSessionsTable createAlias(String alias) {
+    return $DraftSessionsTable(attachedDatabase, alias);
+  }
+
+  static JsonTypeConverter2<ActivityType, String, String> $convertertype =
+      const EnumNameConverter<ActivityType>(ActivityType.values);
+}
+
+class DraftSession extends DataClass implements Insertable<DraftSession> {
+  final String userId;
+  final ActivityType type;
+  final DateTime startedAt;
+  final int elapsedSeconds;
+  const DraftSession({
+    required this.userId,
+    required this.type,
+    required this.startedAt,
+    required this.elapsedSeconds,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['user_id'] = Variable<String>(userId);
+    {
+      map['type'] = Variable<String>(
+        $DraftSessionsTable.$convertertype.toSql(type),
+      );
+    }
+    map['started_at'] = Variable<DateTime>(startedAt);
+    map['elapsed_seconds'] = Variable<int>(elapsedSeconds);
+    return map;
+  }
+
+  DraftSessionsCompanion toCompanion(bool nullToAbsent) {
+    return DraftSessionsCompanion(
+      userId: Value(userId),
+      type: Value(type),
+      startedAt: Value(startedAt),
+      elapsedSeconds: Value(elapsedSeconds),
+    );
+  }
+
+  factory DraftSession.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return DraftSession(
+      userId: serializer.fromJson<String>(json['userId']),
+      type: $DraftSessionsTable.$convertertype.fromJson(
+        serializer.fromJson<String>(json['type']),
+      ),
+      startedAt: serializer.fromJson<DateTime>(json['startedAt']),
+      elapsedSeconds: serializer.fromJson<int>(json['elapsedSeconds']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'userId': serializer.toJson<String>(userId),
+      'type': serializer.toJson<String>(
+        $DraftSessionsTable.$convertertype.toJson(type),
+      ),
+      'startedAt': serializer.toJson<DateTime>(startedAt),
+      'elapsedSeconds': serializer.toJson<int>(elapsedSeconds),
+    };
+  }
+
+  DraftSession copyWith({
+    String? userId,
+    ActivityType? type,
+    DateTime? startedAt,
+    int? elapsedSeconds,
+  }) => DraftSession(
+    userId: userId ?? this.userId,
+    type: type ?? this.type,
+    startedAt: startedAt ?? this.startedAt,
+    elapsedSeconds: elapsedSeconds ?? this.elapsedSeconds,
+  );
+  DraftSession copyWithCompanion(DraftSessionsCompanion data) {
+    return DraftSession(
+      userId: data.userId.present ? data.userId.value : this.userId,
+      type: data.type.present ? data.type.value : this.type,
+      startedAt: data.startedAt.present ? data.startedAt.value : this.startedAt,
+      elapsedSeconds: data.elapsedSeconds.present
+          ? data.elapsedSeconds.value
+          : this.elapsedSeconds,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('DraftSession(')
+          ..write('userId: $userId, ')
+          ..write('type: $type, ')
+          ..write('startedAt: $startedAt, ')
+          ..write('elapsedSeconds: $elapsedSeconds')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(userId, type, startedAt, elapsedSeconds);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is DraftSession &&
+          other.userId == this.userId &&
+          other.type == this.type &&
+          other.startedAt == this.startedAt &&
+          other.elapsedSeconds == this.elapsedSeconds);
+}
+
+class DraftSessionsCompanion extends UpdateCompanion<DraftSession> {
+  final Value<String> userId;
+  final Value<ActivityType> type;
+  final Value<DateTime> startedAt;
+  final Value<int> elapsedSeconds;
+  final Value<int> rowid;
+  const DraftSessionsCompanion({
+    this.userId = const Value.absent(),
+    this.type = const Value.absent(),
+    this.startedAt = const Value.absent(),
+    this.elapsedSeconds = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  DraftSessionsCompanion.insert({
+    required String userId,
+    required ActivityType type,
+    required DateTime startedAt,
+    this.elapsedSeconds = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : userId = Value(userId),
+       type = Value(type),
+       startedAt = Value(startedAt);
+  static Insertable<DraftSession> custom({
+    Expression<String>? userId,
+    Expression<String>? type,
+    Expression<DateTime>? startedAt,
+    Expression<int>? elapsedSeconds,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (userId != null) 'user_id': userId,
+      if (type != null) 'type': type,
+      if (startedAt != null) 'started_at': startedAt,
+      if (elapsedSeconds != null) 'elapsed_seconds': elapsedSeconds,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  DraftSessionsCompanion copyWith({
+    Value<String>? userId,
+    Value<ActivityType>? type,
+    Value<DateTime>? startedAt,
+    Value<int>? elapsedSeconds,
+    Value<int>? rowid,
+  }) {
+    return DraftSessionsCompanion(
+      userId: userId ?? this.userId,
+      type: type ?? this.type,
+      startedAt: startedAt ?? this.startedAt,
+      elapsedSeconds: elapsedSeconds ?? this.elapsedSeconds,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (userId.present) {
+      map['user_id'] = Variable<String>(userId.value);
+    }
+    if (type.present) {
+      map['type'] = Variable<String>(
+        $DraftSessionsTable.$convertertype.toSql(type.value),
+      );
+    }
+    if (startedAt.present) {
+      map['started_at'] = Variable<DateTime>(startedAt.value);
+    }
+    if (elapsedSeconds.present) {
+      map['elapsed_seconds'] = Variable<int>(elapsedSeconds.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('DraftSessionsCompanion(')
+          ..write('userId: $userId, ')
+          ..write('type: $type, ')
+          ..write('startedAt: $startedAt, ')
+          ..write('elapsedSeconds: $elapsedSeconds, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $DraftPointsTable extends DraftPoints
+    with TableInfo<$DraftPointsTable, DraftPoint> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $DraftPointsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const VerificationMeta _userIdMeta = const VerificationMeta('userId');
+  @override
+  late final GeneratedColumn<String> userId = GeneratedColumn<String>(
+    'user_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES draft_sessions (user_id) ON DELETE CASCADE',
+    ),
+  );
+  static const VerificationMeta _segmentIndexMeta = const VerificationMeta(
+    'segmentIndex',
+  );
+  @override
+  late final GeneratedColumn<int> segmentIndex = GeneratedColumn<int>(
+    'segment_index',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _latitudeMeta = const VerificationMeta(
+    'latitude',
+  );
+  @override
+  late final GeneratedColumn<double> latitude = GeneratedColumn<double>(
+    'latitude',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _longitudeMeta = const VerificationMeta(
+    'longitude',
+  );
+  @override
+  late final GeneratedColumn<double> longitude = GeneratedColumn<double>(
+    'longitude',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _accuracyMetersMeta = const VerificationMeta(
+    'accuracyMeters',
+  );
+  @override
+  late final GeneratedColumn<double> accuracyMeters = GeneratedColumn<double>(
+    'accuracy_meters',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _recordedAtMeta = const VerificationMeta(
+    'recordedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> recordedAt = GeneratedColumn<DateTime>(
+    'recorded_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    userId,
+    segmentIndex,
+    latitude,
+    longitude,
+    accuracyMeters,
+    recordedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'draft_points';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<DraftPoint> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('user_id')) {
+      context.handle(
+        _userIdMeta,
+        userId.isAcceptableOrUnknown(data['user_id']!, _userIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_userIdMeta);
+    }
+    if (data.containsKey('segment_index')) {
+      context.handle(
+        _segmentIndexMeta,
+        segmentIndex.isAcceptableOrUnknown(
+          data['segment_index']!,
+          _segmentIndexMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_segmentIndexMeta);
+    }
+    if (data.containsKey('latitude')) {
+      context.handle(
+        _latitudeMeta,
+        latitude.isAcceptableOrUnknown(data['latitude']!, _latitudeMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_latitudeMeta);
+    }
+    if (data.containsKey('longitude')) {
+      context.handle(
+        _longitudeMeta,
+        longitude.isAcceptableOrUnknown(data['longitude']!, _longitudeMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_longitudeMeta);
+    }
+    if (data.containsKey('accuracy_meters')) {
+      context.handle(
+        _accuracyMetersMeta,
+        accuracyMeters.isAcceptableOrUnknown(
+          data['accuracy_meters']!,
+          _accuracyMetersMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_accuracyMetersMeta);
+    }
+    if (data.containsKey('recorded_at')) {
+      context.handle(
+        _recordedAtMeta,
+        recordedAt.isAcceptableOrUnknown(data['recorded_at']!, _recordedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_recordedAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  DraftPoint map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return DraftPoint(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}id'],
+      )!,
+      userId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}user_id'],
+      )!,
+      segmentIndex: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}segment_index'],
+      )!,
+      latitude: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}latitude'],
+      )!,
+      longitude: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}longitude'],
+      )!,
+      accuracyMeters: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}accuracy_meters'],
+      )!,
+      recordedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}recorded_at'],
+      )!,
+    );
+  }
+
+  @override
+  $DraftPointsTable createAlias(String alias) {
+    return $DraftPointsTable(attachedDatabase, alias);
+  }
+}
+
+class DraftPoint extends DataClass implements Insertable<DraftPoint> {
+  final int id;
+  final String userId;
+  final int segmentIndex;
+  final double latitude;
+  final double longitude;
+  final double accuracyMeters;
+  final DateTime recordedAt;
+  const DraftPoint({
+    required this.id,
+    required this.userId,
+    required this.segmentIndex,
+    required this.latitude,
+    required this.longitude,
+    required this.accuracyMeters,
+    required this.recordedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['user_id'] = Variable<String>(userId);
+    map['segment_index'] = Variable<int>(segmentIndex);
+    map['latitude'] = Variable<double>(latitude);
+    map['longitude'] = Variable<double>(longitude);
+    map['accuracy_meters'] = Variable<double>(accuracyMeters);
+    map['recorded_at'] = Variable<DateTime>(recordedAt);
+    return map;
+  }
+
+  DraftPointsCompanion toCompanion(bool nullToAbsent) {
+    return DraftPointsCompanion(
+      id: Value(id),
+      userId: Value(userId),
+      segmentIndex: Value(segmentIndex),
+      latitude: Value(latitude),
+      longitude: Value(longitude),
+      accuracyMeters: Value(accuracyMeters),
+      recordedAt: Value(recordedAt),
+    );
+  }
+
+  factory DraftPoint.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return DraftPoint(
+      id: serializer.fromJson<int>(json['id']),
+      userId: serializer.fromJson<String>(json['userId']),
+      segmentIndex: serializer.fromJson<int>(json['segmentIndex']),
+      latitude: serializer.fromJson<double>(json['latitude']),
+      longitude: serializer.fromJson<double>(json['longitude']),
+      accuracyMeters: serializer.fromJson<double>(json['accuracyMeters']),
+      recordedAt: serializer.fromJson<DateTime>(json['recordedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'userId': serializer.toJson<String>(userId),
+      'segmentIndex': serializer.toJson<int>(segmentIndex),
+      'latitude': serializer.toJson<double>(latitude),
+      'longitude': serializer.toJson<double>(longitude),
+      'accuracyMeters': serializer.toJson<double>(accuracyMeters),
+      'recordedAt': serializer.toJson<DateTime>(recordedAt),
+    };
+  }
+
+  DraftPoint copyWith({
+    int? id,
+    String? userId,
+    int? segmentIndex,
+    double? latitude,
+    double? longitude,
+    double? accuracyMeters,
+    DateTime? recordedAt,
+  }) => DraftPoint(
+    id: id ?? this.id,
+    userId: userId ?? this.userId,
+    segmentIndex: segmentIndex ?? this.segmentIndex,
+    latitude: latitude ?? this.latitude,
+    longitude: longitude ?? this.longitude,
+    accuracyMeters: accuracyMeters ?? this.accuracyMeters,
+    recordedAt: recordedAt ?? this.recordedAt,
+  );
+  DraftPoint copyWithCompanion(DraftPointsCompanion data) {
+    return DraftPoint(
+      id: data.id.present ? data.id.value : this.id,
+      userId: data.userId.present ? data.userId.value : this.userId,
+      segmentIndex: data.segmentIndex.present
+          ? data.segmentIndex.value
+          : this.segmentIndex,
+      latitude: data.latitude.present ? data.latitude.value : this.latitude,
+      longitude: data.longitude.present ? data.longitude.value : this.longitude,
+      accuracyMeters: data.accuracyMeters.present
+          ? data.accuracyMeters.value
+          : this.accuracyMeters,
+      recordedAt: data.recordedAt.present
+          ? data.recordedAt.value
+          : this.recordedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('DraftPoint(')
+          ..write('id: $id, ')
+          ..write('userId: $userId, ')
+          ..write('segmentIndex: $segmentIndex, ')
+          ..write('latitude: $latitude, ')
+          ..write('longitude: $longitude, ')
+          ..write('accuracyMeters: $accuracyMeters, ')
+          ..write('recordedAt: $recordedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    userId,
+    segmentIndex,
+    latitude,
+    longitude,
+    accuracyMeters,
+    recordedAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is DraftPoint &&
+          other.id == this.id &&
+          other.userId == this.userId &&
+          other.segmentIndex == this.segmentIndex &&
+          other.latitude == this.latitude &&
+          other.longitude == this.longitude &&
+          other.accuracyMeters == this.accuracyMeters &&
+          other.recordedAt == this.recordedAt);
+}
+
+class DraftPointsCompanion extends UpdateCompanion<DraftPoint> {
+  final Value<int> id;
+  final Value<String> userId;
+  final Value<int> segmentIndex;
+  final Value<double> latitude;
+  final Value<double> longitude;
+  final Value<double> accuracyMeters;
+  final Value<DateTime> recordedAt;
+  const DraftPointsCompanion({
+    this.id = const Value.absent(),
+    this.userId = const Value.absent(),
+    this.segmentIndex = const Value.absent(),
+    this.latitude = const Value.absent(),
+    this.longitude = const Value.absent(),
+    this.accuracyMeters = const Value.absent(),
+    this.recordedAt = const Value.absent(),
+  });
+  DraftPointsCompanion.insert({
+    this.id = const Value.absent(),
+    required String userId,
+    required int segmentIndex,
+    required double latitude,
+    required double longitude,
+    required double accuracyMeters,
+    required DateTime recordedAt,
+  }) : userId = Value(userId),
+       segmentIndex = Value(segmentIndex),
+       latitude = Value(latitude),
+       longitude = Value(longitude),
+       accuracyMeters = Value(accuracyMeters),
+       recordedAt = Value(recordedAt);
+  static Insertable<DraftPoint> custom({
+    Expression<int>? id,
+    Expression<String>? userId,
+    Expression<int>? segmentIndex,
+    Expression<double>? latitude,
+    Expression<double>? longitude,
+    Expression<double>? accuracyMeters,
+    Expression<DateTime>? recordedAt,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (userId != null) 'user_id': userId,
+      if (segmentIndex != null) 'segment_index': segmentIndex,
+      if (latitude != null) 'latitude': latitude,
+      if (longitude != null) 'longitude': longitude,
+      if (accuracyMeters != null) 'accuracy_meters': accuracyMeters,
+      if (recordedAt != null) 'recorded_at': recordedAt,
+    });
+  }
+
+  DraftPointsCompanion copyWith({
+    Value<int>? id,
+    Value<String>? userId,
+    Value<int>? segmentIndex,
+    Value<double>? latitude,
+    Value<double>? longitude,
+    Value<double>? accuracyMeters,
+    Value<DateTime>? recordedAt,
+  }) {
+    return DraftPointsCompanion(
+      id: id ?? this.id,
+      userId: userId ?? this.userId,
+      segmentIndex: segmentIndex ?? this.segmentIndex,
+      latitude: latitude ?? this.latitude,
+      longitude: longitude ?? this.longitude,
+      accuracyMeters: accuracyMeters ?? this.accuracyMeters,
+      recordedAt: recordedAt ?? this.recordedAt,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (userId.present) {
+      map['user_id'] = Variable<String>(userId.value);
+    }
+    if (segmentIndex.present) {
+      map['segment_index'] = Variable<int>(segmentIndex.value);
+    }
+    if (latitude.present) {
+      map['latitude'] = Variable<double>(latitude.value);
+    }
+    if (longitude.present) {
+      map['longitude'] = Variable<double>(longitude.value);
+    }
+    if (accuracyMeters.present) {
+      map['accuracy_meters'] = Variable<double>(accuracyMeters.value);
+    }
+    if (recordedAt.present) {
+      map['recorded_at'] = Variable<DateTime>(recordedAt.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('DraftPointsCompanion(')
+          ..write('id: $id, ')
+          ..write('userId: $userId, ')
+          ..write('segmentIndex: $segmentIndex, ')
+          ..write('latitude: $latitude, ')
+          ..write('longitude: $longitude, ')
+          ..write('accuracyMeters: $accuracyMeters, ')
+          ..write('recordedAt: $recordedAt')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -951,6 +1744,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   );
   late final $TrackPointRecordsTable trackPointRecords =
       $TrackPointRecordsTable(this);
+  late final $DraftSessionsTable draftSessions = $DraftSessionsTable(this);
+  late final $DraftPointsTable draftPoints = $DraftPointsTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -958,6 +1753,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   List<DatabaseSchemaEntity> get allSchemaEntities => [
     activityRecords,
     trackPointRecords,
+    draftSessions,
+    draftPoints,
   ];
   @override
   StreamQueryUpdateRules get streamUpdateRules => const StreamQueryUpdateRules([
@@ -967,6 +1764,13 @@ abstract class _$AppDatabase extends GeneratedDatabase {
         limitUpdateKind: UpdateKind.delete,
       ),
       result: [TableUpdate('track_point_records', kind: UpdateKind.delete)],
+    ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'draft_sessions',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [TableUpdate('draft_points', kind: UpdateKind.delete)],
     ),
   ]);
 }
@@ -1694,6 +2498,650 @@ typedef $$TrackPointRecordsTableProcessedTableManager =
       TrackPointRecord,
       PrefetchHooks Function({bool activityId})
     >;
+typedef $$DraftSessionsTableCreateCompanionBuilder =
+    DraftSessionsCompanion Function({
+      required String userId,
+      required ActivityType type,
+      required DateTime startedAt,
+      Value<int> elapsedSeconds,
+      Value<int> rowid,
+    });
+typedef $$DraftSessionsTableUpdateCompanionBuilder =
+    DraftSessionsCompanion Function({
+      Value<String> userId,
+      Value<ActivityType> type,
+      Value<DateTime> startedAt,
+      Value<int> elapsedSeconds,
+      Value<int> rowid,
+    });
+
+final class $$DraftSessionsTableReferences
+    extends BaseReferences<_$AppDatabase, $DraftSessionsTable, DraftSession> {
+  $$DraftSessionsTableReferences(
+    super.$_db,
+    super.$_table,
+    super.$_typedResult,
+  );
+
+  static MultiTypedResultKey<$DraftPointsTable, List<DraftPoint>>
+  _draftPointsRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
+    db.draftPoints,
+    aliasName: 'draft_sessions__user_id__draft_points__user_id',
+  );
+
+  $$DraftPointsTableProcessedTableManager get draftPointsRefs {
+    final manager = $$DraftPointsTableTableManager($_db, $_db.draftPoints)
+        .filter(
+          (f) => f.userId.userId.sqlEquals($_itemColumn<String>('user_id')!),
+        );
+
+    final cache = $_typedResult.readTableOrNull(_draftPointsRefsTable($_db));
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+}
+
+class $$DraftSessionsTableFilterComposer
+    extends Composer<_$AppDatabase, $DraftSessionsTable> {
+  $$DraftSessionsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get userId => $composableBuilder(
+    column: $table.userId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnWithTypeConverterFilters<ActivityType, ActivityType, String> get type =>
+      $composableBuilder(
+        column: $table.type,
+        builder: (column) => ColumnWithTypeConverterFilters(column),
+      );
+
+  ColumnFilters<DateTime> get startedAt => $composableBuilder(
+    column: $table.startedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get elapsedSeconds => $composableBuilder(
+    column: $table.elapsedSeconds,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  Expression<bool> draftPointsRefs(
+    Expression<bool> Function($$DraftPointsTableFilterComposer f) f,
+  ) {
+    final $$DraftPointsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.userId,
+      referencedTable: $db.draftPoints,
+      getReferencedColumn: (t) => t.userId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$DraftPointsTableFilterComposer(
+            $db: $db,
+            $table: $db.draftPoints,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+}
+
+class $$DraftSessionsTableOrderingComposer
+    extends Composer<_$AppDatabase, $DraftSessionsTable> {
+  $$DraftSessionsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get userId => $composableBuilder(
+    column: $table.userId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get type => $composableBuilder(
+    column: $table.type,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get startedAt => $composableBuilder(
+    column: $table.startedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get elapsedSeconds => $composableBuilder(
+    column: $table.elapsedSeconds,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$DraftSessionsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $DraftSessionsTable> {
+  $$DraftSessionsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get userId =>
+      $composableBuilder(column: $table.userId, builder: (column) => column);
+
+  GeneratedColumnWithTypeConverter<ActivityType, String> get type =>
+      $composableBuilder(column: $table.type, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get startedAt =>
+      $composableBuilder(column: $table.startedAt, builder: (column) => column);
+
+  GeneratedColumn<int> get elapsedSeconds => $composableBuilder(
+    column: $table.elapsedSeconds,
+    builder: (column) => column,
+  );
+
+  Expression<T> draftPointsRefs<T extends Object>(
+    Expression<T> Function($$DraftPointsTableAnnotationComposer a) f,
+  ) {
+    final $$DraftPointsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.userId,
+      referencedTable: $db.draftPoints,
+      getReferencedColumn: (t) => t.userId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$DraftPointsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.draftPoints,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+}
+
+class $$DraftSessionsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $DraftSessionsTable,
+          DraftSession,
+          $$DraftSessionsTableFilterComposer,
+          $$DraftSessionsTableOrderingComposer,
+          $$DraftSessionsTableAnnotationComposer,
+          $$DraftSessionsTableCreateCompanionBuilder,
+          $$DraftSessionsTableUpdateCompanionBuilder,
+          (DraftSession, $$DraftSessionsTableReferences),
+          DraftSession,
+          PrefetchHooks Function({bool draftPointsRefs})
+        > {
+  $$DraftSessionsTableTableManager(_$AppDatabase db, $DraftSessionsTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$DraftSessionsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$DraftSessionsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$DraftSessionsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> userId = const Value.absent(),
+                Value<ActivityType> type = const Value.absent(),
+                Value<DateTime> startedAt = const Value.absent(),
+                Value<int> elapsedSeconds = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => DraftSessionsCompanion(
+                userId: userId,
+                type: type,
+                startedAt: startedAt,
+                elapsedSeconds: elapsedSeconds,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String userId,
+                required ActivityType type,
+                required DateTime startedAt,
+                Value<int> elapsedSeconds = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => DraftSessionsCompanion.insert(
+                userId: userId,
+                type: type,
+                startedAt: startedAt,
+                elapsedSeconds: elapsedSeconds,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable(table),
+                  $$DraftSessionsTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: ({draftPointsRefs = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [if (draftPointsRefs) db.draftPoints],
+              addJoins: null,
+              getPrefetchedDataCallback: (items) async {
+                return [
+                  if (draftPointsRefs)
+                    await $_getPrefetchedData<
+                      DraftSession,
+                      $DraftSessionsTable,
+                      DraftPoint
+                    >(
+                      currentTable: table,
+                      referencedTable: $$DraftSessionsTableReferences
+                          ._draftPointsRefsTable(db),
+                      managerFromTypedResult: (p0) =>
+                          $$DraftSessionsTableReferences(
+                            db,
+                            table,
+                            p0,
+                          ).draftPointsRefs,
+                      referencedItemsForCurrentItem: (item, referencedItems) =>
+                          referencedItems.where((e) => e.userId == item.userId),
+                      typedResults: items,
+                    ),
+                ];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $$DraftSessionsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $DraftSessionsTable,
+      DraftSession,
+      $$DraftSessionsTableFilterComposer,
+      $$DraftSessionsTableOrderingComposer,
+      $$DraftSessionsTableAnnotationComposer,
+      $$DraftSessionsTableCreateCompanionBuilder,
+      $$DraftSessionsTableUpdateCompanionBuilder,
+      (DraftSession, $$DraftSessionsTableReferences),
+      DraftSession,
+      PrefetchHooks Function({bool draftPointsRefs})
+    >;
+typedef $$DraftPointsTableCreateCompanionBuilder =
+    DraftPointsCompanion Function({
+      Value<int> id,
+      required String userId,
+      required int segmentIndex,
+      required double latitude,
+      required double longitude,
+      required double accuracyMeters,
+      required DateTime recordedAt,
+    });
+typedef $$DraftPointsTableUpdateCompanionBuilder =
+    DraftPointsCompanion Function({
+      Value<int> id,
+      Value<String> userId,
+      Value<int> segmentIndex,
+      Value<double> latitude,
+      Value<double> longitude,
+      Value<double> accuracyMeters,
+      Value<DateTime> recordedAt,
+    });
+
+final class $$DraftPointsTableReferences
+    extends BaseReferences<_$AppDatabase, $DraftPointsTable, DraftPoint> {
+  $$DraftPointsTableReferences(super.$_db, super.$_table, super.$_typedResult);
+
+  static $DraftSessionsTable _userIdTable(_$AppDatabase db) => db.draftSessions
+      .createAlias('draft_points__user_id__draft_sessions__user_id');
+
+  $$DraftSessionsTableProcessedTableManager get userId {
+    final $_column = $_itemColumn<String>('user_id')!;
+
+    final manager = $$DraftSessionsTableTableManager(
+      $_db,
+      $_db.draftSessions,
+    ).filter((f) => f.userId.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_userIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+}
+
+class $$DraftPointsTableFilterComposer
+    extends Composer<_$AppDatabase, $DraftPointsTable> {
+  $$DraftPointsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get segmentIndex => $composableBuilder(
+    column: $table.segmentIndex,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get latitude => $composableBuilder(
+    column: $table.latitude,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get longitude => $composableBuilder(
+    column: $table.longitude,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get accuracyMeters => $composableBuilder(
+    column: $table.accuracyMeters,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get recordedAt => $composableBuilder(
+    column: $table.recordedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  $$DraftSessionsTableFilterComposer get userId {
+    final $$DraftSessionsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.userId,
+      referencedTable: $db.draftSessions,
+      getReferencedColumn: (t) => t.userId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$DraftSessionsTableFilterComposer(
+            $db: $db,
+            $table: $db.draftSessions,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$DraftPointsTableOrderingComposer
+    extends Composer<_$AppDatabase, $DraftPointsTable> {
+  $$DraftPointsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get segmentIndex => $composableBuilder(
+    column: $table.segmentIndex,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get latitude => $composableBuilder(
+    column: $table.latitude,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get longitude => $composableBuilder(
+    column: $table.longitude,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get accuracyMeters => $composableBuilder(
+    column: $table.accuracyMeters,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get recordedAt => $composableBuilder(
+    column: $table.recordedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $$DraftSessionsTableOrderingComposer get userId {
+    final $$DraftSessionsTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.userId,
+      referencedTable: $db.draftSessions,
+      getReferencedColumn: (t) => t.userId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$DraftSessionsTableOrderingComposer(
+            $db: $db,
+            $table: $db.draftSessions,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$DraftPointsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $DraftPointsTable> {
+  $$DraftPointsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<int> get segmentIndex => $composableBuilder(
+    column: $table.segmentIndex,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<double> get latitude =>
+      $composableBuilder(column: $table.latitude, builder: (column) => column);
+
+  GeneratedColumn<double> get longitude =>
+      $composableBuilder(column: $table.longitude, builder: (column) => column);
+
+  GeneratedColumn<double> get accuracyMeters => $composableBuilder(
+    column: $table.accuracyMeters,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get recordedAt => $composableBuilder(
+    column: $table.recordedAt,
+    builder: (column) => column,
+  );
+
+  $$DraftSessionsTableAnnotationComposer get userId {
+    final $$DraftSessionsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.userId,
+      referencedTable: $db.draftSessions,
+      getReferencedColumn: (t) => t.userId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$DraftSessionsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.draftSessions,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$DraftPointsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $DraftPointsTable,
+          DraftPoint,
+          $$DraftPointsTableFilterComposer,
+          $$DraftPointsTableOrderingComposer,
+          $$DraftPointsTableAnnotationComposer,
+          $$DraftPointsTableCreateCompanionBuilder,
+          $$DraftPointsTableUpdateCompanionBuilder,
+          (DraftPoint, $$DraftPointsTableReferences),
+          DraftPoint,
+          PrefetchHooks Function({bool userId})
+        > {
+  $$DraftPointsTableTableManager(_$AppDatabase db, $DraftPointsTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$DraftPointsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$DraftPointsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$DraftPointsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<String> userId = const Value.absent(),
+                Value<int> segmentIndex = const Value.absent(),
+                Value<double> latitude = const Value.absent(),
+                Value<double> longitude = const Value.absent(),
+                Value<double> accuracyMeters = const Value.absent(),
+                Value<DateTime> recordedAt = const Value.absent(),
+              }) => DraftPointsCompanion(
+                id: id,
+                userId: userId,
+                segmentIndex: segmentIndex,
+                latitude: latitude,
+                longitude: longitude,
+                accuracyMeters: accuracyMeters,
+                recordedAt: recordedAt,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                required String userId,
+                required int segmentIndex,
+                required double latitude,
+                required double longitude,
+                required double accuracyMeters,
+                required DateTime recordedAt,
+              }) => DraftPointsCompanion.insert(
+                id: id,
+                userId: userId,
+                segmentIndex: segmentIndex,
+                latitude: latitude,
+                longitude: longitude,
+                accuracyMeters: accuracyMeters,
+                recordedAt: recordedAt,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable(table),
+                  $$DraftPointsTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: ({userId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins:
+                  <
+                    T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic
+                    >
+                  >(state) {
+                    if (userId) {
+                      state =
+                          state.withJoin(
+                                currentTable: table,
+                                currentColumn: table.userId,
+                                referencedTable: $$DraftPointsTableReferences
+                                    ._userIdTable(db),
+                                referencedColumn: $$DraftPointsTableReferences
+                                    ._userIdTable(db)
+                                    .userId,
+                              )
+                              as T;
+                    }
+
+                    return state;
+                  },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $$DraftPointsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $DraftPointsTable,
+      DraftPoint,
+      $$DraftPointsTableFilterComposer,
+      $$DraftPointsTableOrderingComposer,
+      $$DraftPointsTableAnnotationComposer,
+      $$DraftPointsTableCreateCompanionBuilder,
+      $$DraftPointsTableUpdateCompanionBuilder,
+      (DraftPoint, $$DraftPointsTableReferences),
+      DraftPoint,
+      PrefetchHooks Function({bool userId})
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -1702,4 +3150,8 @@ class $AppDatabaseManager {
       $$ActivityRecordsTableTableManager(_db, _db.activityRecords);
   $$TrackPointRecordsTableTableManager get trackPointRecords =>
       $$TrackPointRecordsTableTableManager(_db, _db.trackPointRecords);
+  $$DraftSessionsTableTableManager get draftSessions =>
+      $$DraftSessionsTableTableManager(_db, _db.draftSessions);
+  $$DraftPointsTableTableManager get draftPoints =>
+      $$DraftPointsTableTableManager(_db, _db.draftPoints);
 }

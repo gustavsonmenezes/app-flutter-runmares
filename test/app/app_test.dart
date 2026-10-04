@@ -6,10 +6,12 @@ import 'package:runmares/features/auth/data/auth_repository_provider.dart';
 import 'package:runmares/features/auth/domain/auth_failure.dart';
 import 'package:runmares/features/auth/domain/auth_user.dart';
 import 'package:runmares/features/history/data/activity_repository_provider.dart';
+import 'package:runmares/features/recording/data/recording_draft_repository_provider.dart';
 import 'package:runmares/features/sync/data/remote_activity_store_provider.dart';
 
 import '../features/auth/fakes/fake_auth_repository.dart';
 import '../features/recording/fakes/fake_activity_repository.dart';
+import '../features/recording/fakes/fake_recording_draft_repository.dart';
 import '../features/sync/fakes/fake_remote_activity_store.dart';
 
 Future<void> _pumpApp(
@@ -21,6 +23,9 @@ Future<void> _pumpApp(
       overrides: [
         authRepositoryProvider.overrideWithValue(repository),
         activityRepositoryProvider.overrideWithValue(FakeActivityRepository()),
+        recordingDraftRepositoryProvider.overrideWithValue(
+          FakeRecordingDraftRepository(),
+        ),
         remoteActivityStoreProvider.overrideWithValue(
           FakeRemoteActivityStore(),
         ),

@@ -67,6 +67,7 @@ void main() {
 
     expect(tracker.totalMeters, 0);
     expect(tracker.hasAcceptedPoint, isFalse);
+    expect(tracker.segmentCount, 0);
   });
 
   test('keeps accepted points in a single segment', () {
@@ -90,5 +91,13 @@ void main() {
     tracker.add(_point(0.5, 600));
 
     expect(tracker.segments, hasLength(2));
+    expect(tracker.segmentCount, 2);
+  });
+
+  test('tells whether each point was accepted', () {
+    expect(tracker.add(_point(0, 0)), isTrue);
+    expect(tracker.add(_point(0.001, 30)), isTrue);
+    expect(tracker.add(_point(0.002, 60, accuracy: 50)), isFalse);
+    expect(tracker.add(_point(0.00101, 40)), isFalse);
   });
 }
