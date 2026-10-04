@@ -15,31 +15,35 @@ class DistanceTracker {
 
   bool get hasAcceptedPoint => _hasAcceptedPoint;
 
+  int get segmentCount => _segments.length;
+
   List<List<TrackPoint>> get segments =>
       List.unmodifiable(_segments.map(List<TrackPoint>.unmodifiable));
 
-  void add(TrackPoint point) {
-    if (point.accuracyMeters > maxAccuracyMeters) return;
+  /// Devolve `true` quando o ponto entrou no trajeto.
+  bool add(TrackPoint point) {
+    if (point.accuracyMeters > maxAccuracyMeters) return false;
 
     final last = _lastPoint;
     if (last == null) {
       _segments.add([point]);
       _lastPoint = point;
       _hasAcceptedPoint = true;
-      return;
+      return true;
     }
 
     final elapsedSeconds =
         point.timestamp.difference(last.timestamp).inMilliseconds / 1000;
-    if (elapsedSeconds <= 0) return;
+    if (elapsedSeconds <= 0) return false;
 
     final distance = GeoDistance.betweenMeters(last, point);
-    if (distance / elapsedSeconds > maxSpeedMetersPerSecond) return;
-    if (distance < minMovementMeters) return;
+    if (distance / elapsedSeconds > maxSpeedMetersPerSecond) return false;
+    if (distance < minMovementMeters) return false;
 
     _totalMeters += distance;
     _segments.last.add(point);
     _lastPoint = point;
+    return true;
   }
 
   void startNewSegment() {
