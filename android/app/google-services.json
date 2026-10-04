@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "756735381632",
+    "project_id": "app-runmares",
+    "storage_bucket": "app-runmares.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:756735381632:android:5ec3f41698ba1311e11665",
+        "android_client_info": {
+          "package_name": "br.com.runmares.runmares"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCVFAano1b5keoI9LDifAX4oTs8SS1oT2w"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
