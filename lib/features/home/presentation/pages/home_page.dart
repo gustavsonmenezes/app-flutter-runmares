@@ -8,11 +8,18 @@ import 'package:runmares/core/constants/app_spacing.dart';
 import 'package:runmares/core/formatters/metric_formatters.dart';
 import 'package:runmares/features/auth/presentation/providers/current_user_provider.dart';
 import 'package:runmares/features/history/data/activity_repository_provider.dart';
+import 'package:runmares/features/history/domain/activity_summary.dart';
+import 'package:runmares/features/history/presentation/providers/history_providers.dart';
+import 'package:runmares/features/history/presentation/widgets/activity_list_tile.dart';
 import 'package:runmares/features/recording/data/recording_draft_repository_provider.dart';
 import 'package:runmares/features/recording/domain/recording_draft.dart';
 import 'package:runmares/features/recording/domain/recording_status.dart';
 import 'package:runmares/features/recording/presentation/controllers/recording_controller.dart';
 import 'package:runmares/features/recording/presentation/extensions/activity_type_presentation.dart';
+import 'package:runmares/features/statistics/domain/period_statistics.dart';
+import 'package:runmares/features/statistics/domain/statistics_calculator.dart';
+import 'package:runmares/features/statistics/presentation/providers/statistics_clock_provider.dart';
+import 'package:runmares/features/statistics/presentation/widgets/statistics_view.dart';
 import 'package:runmares/features/sync/presentation/providers/sync_providers.dart';
 
 class HomePage extends ConsumerStatefulWidget {
@@ -102,22 +109,96 @@ class _HomePageState extends ConsumerState<HomePage> {
 
   @override
   Widget build(BuildContext context) {
+    final email = ref.watch(currentUserProvider)?.email;
+    final activities = ref.watch(activitySummariesProvider);
+    final now = ref.watch(statisticsClockProvider)();
+    final textTheme = Theme.of(context).textTheme;
+    final name = email?.split('@').first;
+
     return Scaffold(
       appBar: AppBar(title: const Text('Início')),
-      body: Padding(
+      body: SingleChildScrollView(
         padding: const EdgeInsets.all(AppSpacing.screenPadding),
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const Text('Resumo da semana e últimas atividades'),
+            Text(
+              name == null || name.isEmpty ? 'Olá!' : 'Olá, $name',
+              style: textTheme.headlineSmall,
+            ),
             const SizedBox(height: AppSpacing.itemGap),
             FilledButton(
               onPressed: () => context.push(AppRoutes.recording),
               child: const Text('Iniciar atividade'),
             ),
+            const SizedBox(height: AppSpacing.screenPadding),
+            ...activities.when<List<Widget>>(
+              loading: () => const [Center(child: CircularProgressIndicator())],
+              error: (error, stackTrace) => const [
+                Text(
+                  'Não foi possível carregar as atividades.',
+                  textAlign: TextAlign.center,
+                ),
+              ],
+              data: (items) => [
+                Text('Esta semana', style: textTheme.titleMedium),
+                const SizedBox(height: AppSpacing.itemGap),
+                StatisticsView(
+                  statistics: StatisticsCalculator.calculate(
+                    activities: items,
+                    period: StatisticsPeriod.week,
+                    now: now,
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.screenPadding),
+                _RecentActivities(items: items),
+              ],
+            ),
           ],
         ),
       ),
+    );
+  }
+}
+
+class _RecentActivities extends StatelessWidget {
+  const _RecentActivities({required this.items});
+
+  final List<ActivitySummary> items;
+
+  static const int _visibleCount = 3;
+
+  @override
+  Widget build(BuildContext context) {
+    final recent = items.take(_visibleCount).toList();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text(
+          'Últimas atividades',
+          style: Theme.of(context).textTheme.titleMedium,
+        ),
+        const SizedBox(height: AppSpacing.itemGap),
+        if (recent.isEmpty)
+          const Text(
+            'Você ainda não registrou nenhuma atividade.',
+            textAlign: TextAlign.center,
+          )
+        else ...[
+          for (final summary in recent)
+            ActivityListTile(
+              summary: summary,
+              onTap: () => context.push(
+                AppRoutes.activityDetails(summary.id.toString()),
+              ),
+            ),
+          TextButton(
+            onPressed: () => context.go(AppRoutes.history),
+            child: const Text('Ver histórico'),
+          ),
+        ],
+      ],
     );
   }
 }
