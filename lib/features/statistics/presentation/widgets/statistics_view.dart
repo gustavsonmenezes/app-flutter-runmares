@@ -1,13 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:runmares/core/constants/app_spacing.dart';
+import 'package:runmares/core/formatters/distance_unit.dart';
 import 'package:runmares/core/formatters/metric_formatters.dart';
 import 'package:runmares/features/statistics/domain/period_statistics.dart';
 import 'package:runmares/features/statistics/presentation/widgets/distance_bar_chart.dart';
 
 class StatisticsView extends StatelessWidget {
-  const StatisticsView({required this.statistics, super.key});
+  const StatisticsView({
+    required this.statistics,
+    this.unit = DistanceUnit.kilometers,
+    super.key,
+  });
 
   final PeriodStatistics statistics;
+  final DistanceUnit unit;
 
   @override
   Widget build(BuildContext context) {
@@ -18,10 +24,11 @@ class StatisticsView extends StatelessWidget {
           children: [
             Expanded(
               child: _MetricTile(
-                value: MetricFormatters.distanceInKilometers(
+                value: MetricFormatters.distance(
                   statistics.totalDistanceMeters,
+                  unit,
                 ),
-                label: 'Distância (km)',
+                label: 'Distância (${unit.label})',
               ),
             ),
             Expanded(
@@ -48,6 +55,7 @@ class StatisticsView extends StatelessWidget {
           DistanceBarChart(
             buckets: statistics.buckets,
             largestBucketMeters: statistics.largestBucketMeters,
+            unit: unit,
           ),
       ],
     );

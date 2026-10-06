@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:runmares/core/constants/app_spacing.dart';
 import 'package:runmares/features/history/presentation/providers/history_providers.dart';
+import 'package:runmares/features/settings/presentation/providers/settings_providers.dart';
 import 'package:runmares/features/statistics/domain/period_statistics.dart';
 import 'package:runmares/features/statistics/domain/statistics_calculator.dart';
 import 'package:runmares/features/statistics/presentation/providers/statistics_clock_provider.dart';
@@ -21,6 +22,7 @@ class _StatisticsSectionState extends ConsumerState<StatisticsSection> {
   Widget build(BuildContext context) {
     final activities = ref.watch(activitySummariesProvider);
     final now = ref.watch(statisticsClockProvider)();
+    final unit = ref.watch(distanceUnitProvider);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -49,6 +51,7 @@ class _StatisticsSectionState extends ConsumerState<StatisticsSection> {
               period: _period,
               now: now,
             ),
+            unit: unit,
           ),
         ),
       ],

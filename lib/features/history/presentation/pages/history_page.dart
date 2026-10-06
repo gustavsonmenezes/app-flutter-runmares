@@ -5,6 +5,7 @@ import 'package:runmares/app/router/app_routes.dart';
 import 'package:runmares/core/constants/app_spacing.dart';
 import 'package:runmares/features/history/presentation/providers/history_providers.dart';
 import 'package:runmares/features/history/presentation/widgets/activity_list_tile.dart';
+import 'package:runmares/features/settings/presentation/providers/settings_providers.dart';
 
 class HistoryPage extends ConsumerWidget {
   const HistoryPage({super.key});
@@ -12,6 +13,7 @@ class HistoryPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final activities = ref.watch(activitySummariesProvider);
+    final unit = ref.watch(distanceUnitProvider);
 
     return Scaffold(
       appBar: AppBar(title: const Text('Histórico')),
@@ -33,6 +35,7 @@ class HistoryPage extends ConsumerWidget {
               final summary = items[index];
               return ActivityListTile(
                 summary: summary,
+                unit: unit,
                 onTap: () => context.push(
                   AppRoutes.activityDetails(summary.id.toString()),
                 ),

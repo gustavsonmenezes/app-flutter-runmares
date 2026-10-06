@@ -2,18 +2,21 @@ import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:runmares/app/theme/app_colors.dart';
+import 'package:runmares/core/widgets/map_style.dart';
 
 class RouteMap extends StatefulWidget {
   const RouteMap({
     required this.segments,
     this.followLastPoint = false,
     this.fitRoute = false,
+    this.style = MapStyle.standard,
     super.key,
   });
 
   final List<List<LatLng>> segments;
   final bool followLastPoint;
   final bool fitRoute;
+  final MapStyle style;
 
   @override
   State<RouteMap> createState() => _RouteMapState();
@@ -26,8 +29,6 @@ class _RouteMapState extends State<RouteMap> {
   static const double _fitPadding = 32;
   static const double _routeWidth = 5;
   static const double _markerSize = 22;
-  static const String _tileUrl =
-      'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
   static const String _userAgentPackage = 'br.com.runmares.runmares';
 
   final MapController _controller = MapController();
@@ -63,7 +64,8 @@ class _RouteMapState extends State<RouteMap> {
       options: _buildOptions(points),
       children: [
         TileLayer(
-          urlTemplate: _tileUrl,
+          urlTemplate: widget.style.urlTemplate,
+          maxNativeZoom: widget.style.maxNativeZoom,
           userAgentPackageName: _userAgentPackage,
         ),
         PolylineLayer(
@@ -78,8 +80,8 @@ class _RouteMapState extends State<RouteMap> {
           ],
         ),
         MarkerLayer(markers: _buildMarkers(points)),
-        const RichAttributionWidget(
-          attributions: [TextSourceAttribution('OpenStreetMap contributors')],
+        RichAttributionWidget(
+          attributions: [TextSourceAttribution(widget.style.attribution)],
         ),
       ],
     );

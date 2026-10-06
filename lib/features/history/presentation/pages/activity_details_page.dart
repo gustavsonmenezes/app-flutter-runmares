@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:runmares/core/constants/app_spacing.dart';
+import 'package:runmares/core/formatters/distance_unit.dart';
 import 'package:runmares/core/formatters/metric_formatters.dart';
+import 'package:runmares/core/widgets/map_style.dart';
 import 'package:runmares/core/widgets/route_map.dart';
 import 'package:runmares/features/history/domain/activity_details.dart';
 import 'package:runmares/features/history/presentation/providers/history_providers.dart';
@@ -9,6 +11,7 @@ import 'package:runmares/features/recording/domain/pace_calculator.dart';
 import 'package:runmares/features/recording/presentation/extensions/activity_type_presentation.dart';
 import 'package:runmares/features/recording/presentation/extensions/route_segments_extension.dart';
 import 'package:runmares/features/recording/presentation/widgets/recording_metrics.dart';
+import 'package:runmares/features/settings/presentation/providers/settings_providers.dart';
 
 class ActivityDetailsPage extends ConsumerWidget {
   const ActivityDetailsPage({required this.activityId, super.key});
@@ -20,6 +23,8 @@ class ActivityDetailsPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final id = int.tryParse(activityId);
+    final unit = ref.watch(distanceUnitProvider);
+    final mapStyle = ref.watch(mapStyleProvider);
 
     return Scaffold(
       appBar: AppBar(title: const Text('Detalhes da atividade')),
@@ -35,16 +40,26 @@ class ActivityDetailsPage extends ConsumerWidget {
                   ),
                   data: (details) => details == null
                       ? const _CenteredMessage(_notFoundMessage)
-                      : _DetailsContent(details: details),
+                      : _DetailsContent(
+                          details: details,
+                          unit: unit,
+                          mapStyle: mapStyle,
+                        ),
                 ),
     );
   }
 }
 
 class _DetailsContent extends StatelessWidget {
-  const _DetailsContent({required this.details});
+  const _DetailsContent({
+    required this.details,
+    required this.unit,
+    required this.mapStyle,
+  });
 
   final ActivityDetails details;
+  final DistanceUnit unit;
+  final MapStyle mapStyle;
 
   @override
   Widget build(BuildContext context) {
@@ -68,6 +83,7 @@ class _DetailsContent extends StatelessWidget {
               child: RouteMap(
                 segments: details.segments.toLatLngSegments(),
                 fitRoute: true,
+                style: mapStyle,
               ),
             ),
           ),
@@ -75,6 +91,7 @@ class _DetailsContent extends StatelessWidget {
           RecordingMetrics(
             distanceMeters: summary.distanceMeters,
             elapsed: summary.duration,
+            unit: unit,
             paceSecondsPerKilometer: PaceCalculator.secondsPerKilometer(
               distanceMeters: summary.distanceMeters,
               elapsed: summary.duration,
