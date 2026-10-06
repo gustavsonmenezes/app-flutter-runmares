@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:runmares/app/router/app_routes.dart';
 import 'package:runmares/core/constants/app_spacing.dart';
+import 'package:runmares/core/formatters/distance_unit.dart';
 import 'package:runmares/core/formatters/metric_formatters.dart';
 import 'package:runmares/features/auth/presentation/providers/current_user_provider.dart';
 import 'package:runmares/features/history/data/activity_repository_provider.dart';
@@ -16,6 +17,7 @@ import 'package:runmares/features/recording/domain/recording_draft.dart';
 import 'package:runmares/features/recording/domain/recording_status.dart';
 import 'package:runmares/features/recording/presentation/controllers/recording_controller.dart';
 import 'package:runmares/features/recording/presentation/extensions/activity_type_presentation.dart';
+import 'package:runmares/features/settings/presentation/providers/settings_providers.dart';
 import 'package:runmares/features/statistics/domain/period_statistics.dart';
 import 'package:runmares/features/statistics/domain/statistics_calculator.dart';
 import 'package:runmares/features/statistics/presentation/providers/statistics_clock_provider.dart';
@@ -46,6 +48,7 @@ class _HomePageState extends ConsumerState<HomePage> {
     final drafts = ref.read(recordingDraftRepositoryProvider);
     final activities = ref.read(activityRepositoryProvider);
     final sync = ref.read(activitySyncServiceProvider);
+    final unit = ref.read(distanceUnitProvider);
     final messenger = ScaffoldMessenger.of(context);
 
     final draft = await drafts.find(user.uid);
@@ -56,7 +59,7 @@ class _HomePageState extends ConsumerState<HomePage> {
       return;
     }
 
-    final shouldSave = await _askToSave(draft);
+    final shouldSave = await _askToSave(draft, unit);
     if (shouldSave != true) {
       await drafts.discard(user.uid);
       return;
@@ -78,10 +81,8 @@ class _HomePageState extends ConsumerState<HomePage> {
     }
   }
 
-  Future<bool?> _askToSave(RecordingDraft draft) {
-    final distance = MetricFormatters.distanceInKilometers(
-      draft.distanceMeters,
-    );
+  Future<bool?> _askToSave(RecordingDraft draft, DistanceUnit unit) {
+    final distance = MetricFormatters.distance(draft.distanceMeters, unit);
 
     return showDialog<bool>(
       context: context,
@@ -90,7 +91,7 @@ class _HomePageState extends ConsumerState<HomePage> {
         title: const Text('Atividade interrompida'),
         content: Text(
           '${draft.type.label} de ${MetricFormatters.dateTime(draft.startedAt)}'
-          ' · $distance km\n\n'
+          ' · $distance ${unit.label}\n\n'
           'Ela não foi finalizada. Deseja salvar o que foi registrado?',
         ),
         actions: [
@@ -112,6 +113,7 @@ class _HomePageState extends ConsumerState<HomePage> {
     final email = ref.watch(currentUserProvider)?.email;
     final activities = ref.watch(activitySummariesProvider);
     final now = ref.watch(statisticsClockProvider)();
+    final unit = ref.watch(distanceUnitProvider);
     final textTheme = Theme.of(context).textTheme;
     final name = email?.split('@').first;
 
@@ -149,9 +151,10 @@ class _HomePageState extends ConsumerState<HomePage> {
                     period: StatisticsPeriod.week,
                     now: now,
                   ),
+                  unit: unit,
                 ),
                 const SizedBox(height: AppSpacing.screenPadding),
-                _RecentActivities(items: items),
+                _RecentActivities(items: items, unit: unit),
               ],
             ),
           ],
@@ -162,9 +165,10 @@ class _HomePageState extends ConsumerState<HomePage> {
 }
 
 class _RecentActivities extends StatelessWidget {
-  const _RecentActivities({required this.items});
+  const _RecentActivities({required this.items, required this.unit});
 
   final List<ActivitySummary> items;
+  final DistanceUnit unit;
 
   static const int _visibleCount = 3;
 
@@ -189,6 +193,7 @@ class _RecentActivities extends StatelessWidget {
           for (final summary in recent)
             ActivityListTile(
               summary: summary,
+              unit: unit,
               onTap: () => context.push(
                 AppRoutes.activityDetails(summary.id.toString()),
               ),

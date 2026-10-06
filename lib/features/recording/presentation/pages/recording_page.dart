@@ -4,12 +4,13 @@ import 'package:runmares/core/constants/app_spacing.dart';
 import 'package:runmares/core/widgets/route_map.dart';
 import 'package:runmares/features/recording/domain/activity_save_status.dart';
 import 'package:runmares/features/recording/domain/recording_status.dart';
-import 'package:runmares/features/recording/presentation/extensions/route_segments_extension.dart';
 import 'package:runmares/features/recording/presentation/controllers/recording_controller.dart';
+import 'package:runmares/features/recording/presentation/extensions/route_segments_extension.dart';
 import 'package:runmares/features/recording/presentation/widgets/activity_type_selector.dart';
 import 'package:runmares/features/recording/presentation/widgets/location_failure_notice.dart';
 import 'package:runmares/features/recording/presentation/widgets/recording_controls.dart';
 import 'package:runmares/features/recording/presentation/widgets/recording_metrics.dart';
+import 'package:runmares/features/settings/presentation/providers/settings_providers.dart';
 
 class RecordingPage extends ConsumerWidget {
   const RecordingPage({super.key});
@@ -18,6 +19,8 @@ class RecordingPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(recordingControllerProvider);
     final controller = ref.read(recordingControllerProvider.notifier);
+    final unit = ref.watch(distanceUnitProvider);
+    final mapStyle = ref.watch(mapStyleProvider);
     final isIdle = state.status == RecordingStatus.idle;
     final failure = state.locationFailure;
     final saveMessage = _saveMessage(state.saveStatus);
@@ -40,6 +43,7 @@ class RecordingPage extends ConsumerWidget {
                 child: RouteMap(
                   segments: state.routeSegments.toLatLngSegments(),
                   followLastPoint: true,
+                  style: mapStyle,
                 ),
               ),
             ),
@@ -47,6 +51,7 @@ class RecordingPage extends ConsumerWidget {
             RecordingMetrics(
               distanceMeters: state.distanceMeters,
               elapsed: state.elapsed,
+              unit: unit,
               paceSecondsPerKilometer: state.averagePaceSecondsPerKilometer,
             ),
             const SizedBox(height: AppSpacing.itemGap),

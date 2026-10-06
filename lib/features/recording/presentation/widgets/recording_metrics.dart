@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:runmares/core/constants/app_spacing.dart';
+import 'package:runmares/core/formatters/distance_unit.dart';
 import 'package:runmares/core/formatters/metric_formatters.dart';
 
 class RecordingMetrics extends StatelessWidget {
@@ -7,12 +8,14 @@ class RecordingMetrics extends StatelessWidget {
     required this.distanceMeters,
     required this.elapsed,
     required this.paceSecondsPerKilometer,
+    this.unit = DistanceUnit.kilometers,
     super.key,
   });
 
   final double distanceMeters;
   final Duration elapsed;
   final int? paceSecondsPerKilometer;
+  final DistanceUnit unit;
 
   @override
   Widget build(BuildContext context) {
@@ -22,10 +25,10 @@ class RecordingMetrics extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         Text(
-          MetricFormatters.distanceInKilometers(distanceMeters),
+          MetricFormatters.distance(distanceMeters, unit),
           style: textTheme.displayMedium?.copyWith(fontWeight: FontWeight.bold),
         ),
-        Text('km', style: textTheme.titleMedium),
+        Text(unit.label, style: textTheme.titleMedium),
         const SizedBox(height: AppSpacing.screenPadding),
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -35,8 +38,8 @@ class RecordingMetrics extends StatelessWidget {
               value: MetricFormatters.duration(elapsed),
             ),
             _MetricItem(
-              label: 'Ritmo (min/km)',
-              value: MetricFormatters.pace(paceSecondsPerKilometer),
+              label: 'Ritmo (min/${unit.label})',
+              value: MetricFormatters.pace(paceSecondsPerKilometer, unit),
             ),
           ],
         ),

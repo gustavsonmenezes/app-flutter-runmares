@@ -1,14 +1,19 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:runmares/core/formatters/distance_unit.dart';
 import 'package:runmares/core/formatters/metric_formatters.dart';
 
 void main() {
-  group('distanceInKilometers', () {
+  group('distance', () {
     test('uses a comma and two decimal places', () {
-      expect(MetricFormatters.distanceInKilometers(1234), '1,23');
+      expect(MetricFormatters.distance(1234), '1,23');
     });
 
     test('formats zero', () {
-      expect(MetricFormatters.distanceInKilometers(0), '0,00');
+      expect(MetricFormatters.distance(0), '0,00');
+    });
+
+    test('converts to miles', () {
+      expect(MetricFormatters.distance(5000, DistanceUnit.miles), '3,11');
     });
   });
 
@@ -30,8 +35,13 @@ void main() {
       expect(MetricFormatters.pace(330), '5:30');
     });
 
+    test('converts the pace to minutes per mile', () {
+      expect(MetricFormatters.pace(330, DistanceUnit.miles), '8:51');
+    });
+
     test('shows a placeholder when the pace is unknown', () {
       expect(MetricFormatters.pace(null), '--:--');
+      expect(MetricFormatters.pace(null, DistanceUnit.miles), '--:--');
     });
   });
 
