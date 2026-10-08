@@ -8,6 +8,8 @@ class RecordingMetrics extends StatelessWidget {
     required this.distanceMeters,
     required this.elapsed,
     required this.paceSecondsPerKilometer,
+    this.currentPaceSecondsPerKilometer,
+    this.showCurrentPace = false,
     this.unit = DistanceUnit.kilometers,
     super.key,
   });
@@ -15,6 +17,8 @@ class RecordingMetrics extends StatelessWidget {
   final double distanceMeters;
   final Duration elapsed;
   final int? paceSecondsPerKilometer;
+  final int? currentPaceSecondsPerKilometer;
+  final bool showCurrentPace;
   final DistanceUnit unit;
 
   @override
@@ -31,15 +35,30 @@ class RecordingMetrics extends StatelessWidget {
         Text(unit.label, style: textTheme.titleMedium),
         const SizedBox(height: AppSpacing.screenPadding),
         Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
-            _MetricItem(
-              label: 'Tempo',
-              value: MetricFormatters.duration(elapsed),
+            Expanded(
+              child: _MetricItem(
+                label: 'Tempo',
+                value: MetricFormatters.duration(elapsed),
+              ),
             ),
-            _MetricItem(
-              label: 'Ritmo (min/${unit.label})',
-              value: MetricFormatters.pace(paceSecondsPerKilometer, unit),
+            if (showCurrentPace)
+              Expanded(
+                child: _MetricItem(
+                  label: 'Atual (min/${unit.label})',
+                  value: MetricFormatters.pace(
+                    currentPaceSecondsPerKilometer,
+                    unit,
+                  ),
+                ),
+              ),
+            Expanded(
+              child: _MetricItem(
+                label: showCurrentPace
+                    ? 'Médio (min/${unit.label})'
+                    : 'Ritmo (min/${unit.label})',
+                value: MetricFormatters.pace(paceSecondsPerKilometer, unit),
+              ),
             ),
           ],
         ),
@@ -66,7 +85,7 @@ class _MetricItem extends StatelessWidget {
             fontWeight: FontWeight.bold,
           ),
         ),
-        Text(label, style: textTheme.bodyMedium),
+        Text(label, style: textTheme.bodyMedium, textAlign: TextAlign.center),
       ],
     );
   }

@@ -44,7 +44,7 @@ void main() {
         child: const MaterialApp(home: RecordingPage()),
       ),
     );
-    expect(find.text('--:--'), findsOneWidget);
+    expect(find.text('--:--'), findsNWidgets(2));
 
     await tester.tap(find.text('Iniciar'));
     await tester.pump();

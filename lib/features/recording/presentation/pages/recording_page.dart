@@ -2,21 +2,46 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:runmares/core/constants/app_spacing.dart';
 import 'package:runmares/core/widgets/route_map.dart';
+import 'package:runmares/features/recording/data/notification_permission_service_provider.dart';
 import 'package:runmares/features/recording/domain/activity_save_status.dart';
+import 'package:runmares/features/recording/domain/notification_permission_service.dart';
 import 'package:runmares/features/recording/domain/recording_status.dart';
 import 'package:runmares/features/recording/presentation/controllers/recording_controller.dart';
 import 'package:runmares/features/recording/presentation/extensions/route_segments_extension.dart';
 import 'package:runmares/features/recording/presentation/widgets/activity_type_selector.dart';
 import 'package:runmares/features/recording/presentation/widgets/location_failure_notice.dart';
+import 'package:runmares/features/recording/presentation/widgets/notification_permission_notice.dart';
 import 'package:runmares/features/recording/presentation/widgets/recording_controls.dart';
 import 'package:runmares/features/recording/presentation/widgets/recording_metrics.dart';
 import 'package:runmares/features/settings/presentation/providers/settings_providers.dart';
 
-class RecordingPage extends ConsumerWidget {
+class RecordingPage extends ConsumerStatefulWidget {
   const RecordingPage({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<RecordingPage> createState() => _RecordingPageState();
+}
+
+class _RecordingPageState extends ConsumerState<RecordingPage> {
+  NotificationPermission? _notificationPermission;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback(
+      (_) => _requestNotificationPermission(),
+    );
+  }
+
+  Future<void> _requestNotificationPermission() async {
+    final service = ref.read(notificationPermissionServiceProvider);
+    final permission = await service.request();
+    if (!mounted) return;
+    setState(() => _notificationPermission = permission);
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final state = ref.watch(recordingControllerProvider);
     final controller = ref.read(recordingControllerProvider.notifier);
     final unit = ref.watch(distanceUnitProvider);
@@ -24,6 +49,10 @@ class RecordingPage extends ConsumerWidget {
     final isIdle = state.status == RecordingStatus.idle;
     final failure = state.locationFailure;
     final saveMessage = _saveMessage(state.saveStatus);
+    final notificationPermission = _notificationPermission;
+    final showNotificationNotice =
+        notificationPermission != null &&
+        notificationPermission != NotificationPermission.granted;
 
     return Scaffold(
       appBar: AppBar(title: const Text('Gravar atividade')),
@@ -52,6 +81,9 @@ class RecordingPage extends ConsumerWidget {
               distanceMeters: state.distanceMeters,
               elapsed: state.elapsed,
               unit: unit,
+              showCurrentPace: true,
+              currentPaceSecondsPerKilometer:
+                  state.currentPaceSecondsPerKilometer,
               paceSecondsPerKilometer: state.averagePaceSecondsPerKilometer,
             ),
             const SizedBox(height: AppSpacing.itemGap),
@@ -71,6 +103,16 @@ class RecordingPage extends ConsumerWidget {
                 onOpenSettings: ref
                     .read(locationServiceProvider)
                     .openAppSettings,
+              ),
+            ],
+            if (showNotificationNotice) ...[
+              const SizedBox(height: AppSpacing.itemGap),
+              NotificationPermissionNotice(
+                permission: notificationPermission,
+                onRetry: _requestNotificationPermission,
+                onOpenSettings: ref
+                    .read(notificationPermissionServiceProvider)
+                    .openSettings,
               ),
             ],
             const SizedBox(height: AppSpacing.itemGap),
