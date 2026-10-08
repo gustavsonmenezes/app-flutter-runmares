@@ -12,6 +12,7 @@ class RecordingState {
     this.distanceMeters = 0,
     this.elapsed = Duration.zero,
     this.routeSegments = const [],
+    this.currentPaceSecondsPerKilometer,
     this.saveStatus = ActivitySaveStatus.none,
     this.locationFailure,
   });
@@ -21,6 +22,7 @@ class RecordingState {
   final double distanceMeters;
   final Duration elapsed;
   final List<List<TrackPoint>> routeSegments;
+  final int? currentPaceSecondsPerKilometer;
   final ActivitySaveStatus saveStatus;
   final LocationFailureReason? locationFailure;
 
@@ -37,6 +39,8 @@ class RecordingState {
     double? distanceMeters,
     Duration? elapsed,
     List<List<TrackPoint>>? routeSegments,
+    int? currentPaceSecondsPerKilometer,
+    bool clearCurrentPace = false,
     ActivitySaveStatus? saveStatus,
     LocationFailureReason? locationFailure,
     bool clearLocationFailure = false,
@@ -47,6 +51,10 @@ class RecordingState {
       distanceMeters: distanceMeters ?? this.distanceMeters,
       elapsed: elapsed ?? this.elapsed,
       routeSegments: routeSegments ?? this.routeSegments,
+      currentPaceSecondsPerKilometer: clearCurrentPace
+          ? null
+          : currentPaceSecondsPerKilometer ??
+                this.currentPaceSecondsPerKilometer,
       saveStatus: saveStatus ?? this.saveStatus,
       locationFailure: clearLocationFailure
           ? null

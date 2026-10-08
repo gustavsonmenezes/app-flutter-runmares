@@ -9,6 +9,7 @@ import 'package:runmares/features/recording/data/recording_draft_repository_prov
 import 'package:runmares/features/recording/domain/activity_save_status.dart';
 import 'package:runmares/features/recording/domain/activity_timer.dart';
 import 'package:runmares/features/recording/domain/activity_type.dart';
+import 'package:runmares/features/recording/domain/current_pace_calculator.dart';
 import 'package:runmares/features/recording/domain/distance_tracker.dart';
 import 'package:runmares/features/recording/domain/location_failure.dart';
 import 'package:runmares/features/recording/domain/recording_status.dart';
@@ -27,12 +28,14 @@ final recordingControllerProvider =
 
 class RecordingController extends Notifier<RecordingState> {
   static const Duration _tickInterval = Duration(seconds: 1);
+  static const Duration _stalePaceAfter = Duration(seconds: 15);
 
   final DistanceTracker _tracker = DistanceTracker();
   final ActivityTimer _timer = ActivityTimer();
   StreamSubscription<TrackPoint>? _subscription;
   Timer? _ticker;
   DateTime? _startedAt;
+  Duration _lastPointElapsed = Duration.zero;
   String? _draftUserId;
   Future<void> _draftQueue = Future.value();
   bool _isDisposed = false;
@@ -59,6 +62,7 @@ class RecordingController extends Notifier<RecordingState> {
 
     _tracker.reset();
     _timer.reset();
+    _lastPointElapsed = Duration.zero;
     final startedAt = DateTime.now();
     _startedAt = startedAt;
     state = state.copyWith(
@@ -66,6 +70,7 @@ class RecordingController extends Notifier<RecordingState> {
       distanceMeters: 0,
       elapsed: Duration.zero,
       routeSegments: const [],
+      clearCurrentPace: true,
       saveStatus: ActivitySaveStatus.none,
       clearLocationFailure: true,
     );
@@ -80,6 +85,7 @@ class RecordingController extends Notifier<RecordingState> {
     state = state.copyWith(
       status: RecordingStatus.paused,
       elapsed: _timer.elapsed,
+      clearCurrentPace: true,
     );
   }
 
@@ -103,6 +109,7 @@ class RecordingController extends Notifier<RecordingState> {
     state = state.copyWith(
       status: RecordingStatus.finished,
       elapsed: _timer.elapsed,
+      clearCurrentPace: true,
     );
     await _saveActivity();
   }
@@ -112,6 +119,7 @@ class RecordingController extends Notifier<RecordingState> {
     _tracker.reset();
     _timer.reset();
     _startedAt = null;
+    _lastPointElapsed = Duration.zero;
     state = RecordingState(activityType: state.activityType);
   }
 
@@ -224,16 +232,40 @@ class RecordingController extends Notifier<RecordingState> {
   }
 
   void _publishElapsed() {
-    state = state.copyWith(elapsed: _timer.elapsed);
+    final elapsed = _timer.elapsed;
+    final isPaceStale =
+        state.currentPaceSecondsPerKilometer != null &&
+        elapsed - _lastPointElapsed > _stalePaceAfter;
+
+    state = isPaceStale
+        ? state.copyWith(elapsed: elapsed, clearCurrentPace: true)
+        : state.copyWith(elapsed: elapsed);
   }
 
   void _onPoint(TrackPoint point) {
     final accepted = _tracker.add(point);
-    state = state.copyWith(
+    var next = state.copyWith(
       distanceMeters: _tracker.totalMeters,
       routeSegments: _tracker.segments,
     );
-    if (accepted) _persistPoint(point);
+
+    if (accepted) {
+      _lastPointElapsed = _timer.elapsed;
+      next = _withCurrentPace(next);
+      _persistPoint(point);
+    }
+    state = next;
+  }
+
+  RecordingState _withCurrentPace(RecordingState base) {
+    final segments = _tracker.segments;
+    final pace = segments.isEmpty
+        ? null
+        : CurrentPaceCalculator.secondsPerKilometer(segments.last);
+
+    return pace == null
+        ? base.copyWith(clearCurrentPace: true)
+        : base.copyWith(currentPaceSecondsPerKilometer: pace);
   }
 
   void _onLocationError(Object error) {
@@ -250,6 +282,7 @@ class RecordingController extends Notifier<RecordingState> {
           ? RecordingStatus.paused
           : RecordingStatus.idle,
       elapsed: _timer.elapsed,
+      clearCurrentPace: true,
       locationFailure: reason,
     );
   }
