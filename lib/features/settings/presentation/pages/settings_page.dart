@@ -28,6 +28,33 @@ class SettingsPage extends ConsumerWidget {
               Text('Conectado como $email', textAlign: TextAlign.center),
               const SizedBox(height: AppSpacing.screenPadding),
             ],
+            Text('Aparência e Tema', style: textTheme.titleMedium),
+            const SizedBox(height: AppSpacing.itemGap),
+            SegmentedButton<ThemeMode>(
+              showSelectedIcon: false,
+              segments: const [
+                ButtonSegment(
+                  value: ThemeMode.light,
+                  label: Text('Claro'),
+                  icon: Icon(Icons.light_mode_outlined),
+                ),
+                ButtonSegment(
+                  value: ThemeMode.dark,
+                  label: Text('Escuro'),
+                  icon: Icon(Icons.dark_mode_outlined),
+                ),
+                ButtonSegment(
+                  value: ThemeMode.system,
+                  label: Text('Sistema'),
+                  icon: Icon(Icons.brightness_auto_outlined),
+                ),
+              ],
+              selected: {settings.themeMode},
+              onSelectionChanged: (selection) {
+                controller.selectThemeMode(selection.first);
+              },
+            ),
+            const SizedBox(height: AppSpacing.screenPadding),
             Text('Unidade de distância', style: textTheme.titleMedium),
             const SizedBox(height: AppSpacing.itemGap),
             SegmentedButton<DistanceUnit>(
