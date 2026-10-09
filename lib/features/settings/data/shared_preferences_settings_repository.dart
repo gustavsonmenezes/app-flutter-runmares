@@ -9,6 +9,7 @@ class SharedPreferencesSettingsRepository implements SettingsRepository {
 
   static const String _distanceUnitKey = 'distance_unit';
   static const String _mapStyleKey = 'map_style';
+  static const String _audioAnnouncementsKey = 'audio_announcements';
 
   final SharedPreferences _preferences;
 
@@ -21,6 +22,8 @@ class SharedPreferencesSettingsRepository implements SettingsRepository {
         DistanceUnit.kilometers,
       ),
       mapStyle: _read(MapStyle.values, _mapStyleKey, MapStyle.standard),
+      audioAnnouncementsEnabled:
+          _preferences.getBool(_audioAnnouncementsKey) ?? true,
     );
   }
 
@@ -28,6 +31,10 @@ class SharedPreferencesSettingsRepository implements SettingsRepository {
   Future<void> save(AppSettings settings) async {
     await _preferences.setString(_distanceUnitKey, settings.distanceUnit.name);
     await _preferences.setString(_mapStyleKey, settings.mapStyle.name);
+    await _preferences.setBool(
+      _audioAnnouncementsKey,
+      settings.audioAnnouncementsEnabled,
+    );
   }
 
   // Um valor desconhecido (por exemplo, de uma versão futura) volta ao padrão.

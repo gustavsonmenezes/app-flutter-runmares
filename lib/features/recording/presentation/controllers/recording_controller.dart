@@ -4,21 +4,29 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:runmares/features/auth/data/auth_repository_provider.dart';
 import 'package:runmares/features/history/data/activity_repository_provider.dart';
 import 'package:runmares/features/history/domain/recorded_activity.dart';
+import 'package:runmares/features/recording/data/flutter_tts_audio_announcer.dart';
 import 'package:runmares/features/recording/data/location_service.dart';
 import 'package:runmares/features/recording/data/recording_draft_repository_provider.dart';
 import 'package:runmares/features/recording/domain/activity_save_status.dart';
 import 'package:runmares/features/recording/domain/activity_timer.dart';
 import 'package:runmares/features/recording/domain/activity_type.dart';
+import 'package:runmares/features/recording/domain/audio_announcer.dart';
 import 'package:runmares/features/recording/domain/current_pace_calculator.dart';
+import 'package:runmares/features/recording/domain/distance_announcement_tracker.dart';
 import 'package:runmares/features/recording/domain/distance_tracker.dart';
 import 'package:runmares/features/recording/domain/location_failure.dart';
 import 'package:runmares/features/recording/domain/recording_status.dart';
 import 'package:runmares/features/recording/domain/track_point.dart';
 import 'package:runmares/features/recording/presentation/controllers/recording_state.dart';
+import 'package:runmares/features/settings/presentation/providers/settings_providers.dart';
 import 'package:runmares/features/sync/presentation/providers/sync_providers.dart';
 
 final locationServiceProvider = Provider<LocationService>(
   (ref) => LocationService(),
+);
+
+final audioAnnouncerProvider = Provider<AudioAnnouncer>(
+  (ref) => FlutterTtsAudioAnnouncer(),
 );
 
 final recordingControllerProvider =
@@ -32,6 +40,9 @@ class RecordingController extends Notifier<RecordingState> {
 
   final DistanceTracker _tracker = DistanceTracker();
   final ActivityTimer _timer = ActivityTimer();
+  final DistanceAnnouncementTracker _announcementTracker =
+      DistanceAnnouncementTracker();
+
   StreamSubscription<TrackPoint>? _subscription;
   Timer? _ticker;
   DateTime? _startedAt;
@@ -49,6 +60,7 @@ class RecordingController extends Notifier<RecordingState> {
     });
     _tracker.reset();
     _timer.reset();
+    _announcementTracker.reset();
     return const RecordingState();
   }
 
@@ -62,6 +74,7 @@ class RecordingController extends Notifier<RecordingState> {
 
     _tracker.reset();
     _timer.reset();
+    _announcementTracker.reset();
     _lastPointElapsed = Duration.zero;
     final startedAt = DateTime.now();
     _startedAt = startedAt;
@@ -118,6 +131,7 @@ class RecordingController extends Notifier<RecordingState> {
     _stopTracking();
     _tracker.reset();
     _timer.reset();
+    _announcementTracker.reset();
     _startedAt = null;
     _lastPointElapsed = Duration.zero;
     state = RecordingState(activityType: state.activityType);
@@ -253,8 +267,28 @@ class RecordingController extends Notifier<RecordingState> {
       _lastPointElapsed = _timer.elapsed;
       next = _withCurrentPace(next);
       _persistPoint(point);
+      _checkAudioAnnouncement(_tracker.totalMeters);
     }
     state = next;
+  }
+
+  void _checkAudioAnnouncement(double currentDistanceMeters) {
+    final enabled = ref.read(audioAnnouncementsEnabledProvider);
+    if (!enabled) return;
+
+    final kmMilestone = _announcementTracker.checkNewKilometerMilestone(
+      currentDistanceMeters,
+    );
+    if (kmMilestone != null) {
+      final announcer = ref.read(audioAnnouncerProvider);
+      unawaited(
+        announcer.announceKilometer(
+          kilometerNumber: kmMilestone,
+          totalElapsed: _timer.elapsed,
+          averagePaceSecondsPerKm: state.averagePaceSecondsPerKilometer,
+        ),
+      );
+    }
   }
 
   RecordingState _withCurrentPace(RecordingState base) {

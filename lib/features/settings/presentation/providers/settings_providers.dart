@@ -16,6 +16,11 @@ final mapStyleProvider = Provider<MapStyle>(
   (ref) => ref.watch(settingsProvider.select((s) => s.mapStyle)),
 );
 
+final audioAnnouncementsEnabledProvider = Provider<bool>(
+  (ref) =>
+      ref.watch(settingsProvider.select((s) => s.audioAnnouncementsEnabled)),
+);
+
 class SettingsController extends Notifier<AppSettings> {
   @override
   AppSettings build() => ref.read(settingsRepositoryProvider).load();
@@ -26,6 +31,10 @@ class SettingsController extends Notifier<AppSettings> {
 
   Future<void> selectMapStyle(MapStyle style) {
     return _update(state.copyWith(mapStyle: style));
+  }
+
+  Future<void> toggleAudioAnnouncements(bool enabled) {
+    return _update(state.copyWith(audioAnnouncementsEnabled: enabled));
   }
 
   Future<void> _update(AppSettings next) async {
