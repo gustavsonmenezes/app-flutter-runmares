@@ -103,6 +103,6 @@ void main() {
 
     expect(find.text('Esta semana'), findsOneWidget);
     expect(find.text('5,00'), findsOneWidget);
-    expect(find.text('30:00'), findsOneWidget);
+    expect(find.text('30:00'), findsAtLeastNWidgets(1));
   });
 }

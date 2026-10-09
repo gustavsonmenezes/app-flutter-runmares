@@ -15,6 +15,8 @@ class RunMaresApp extends ConsumerWidget {
       title: 'RunMares',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light,
+      darkTheme: AppTheme.dark,
+      themeMode: ThemeMode.dark,
       routerConfig: ref.watch(appRouterProvider),
     );
   }

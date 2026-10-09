@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:runmares/app/router/app_routes.dart';
+import 'package:runmares/app/theme/app_colors.dart';
 import 'package:runmares/core/constants/app_spacing.dart';
 import 'package:runmares/core/formatters/distance_unit.dart';
 import 'package:runmares/core/formatters/metric_formatters.dart';
@@ -118,7 +119,15 @@ class _HomePageState extends ConsumerState<HomePage> {
     final name = email?.split('@').first;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Início')),
+      appBar: AppBar(
+        title: const Row(
+          children: [
+            Icon(Icons.directions_run, color: AppColors.primary),
+            SizedBox(width: 8),
+            Text('RunMares', style: TextStyle(fontWeight: FontWeight.bold)),
+          ],
+        ),
+      ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(AppSpacing.screenPadding),
         child: Column(
@@ -126,12 +135,20 @@ class _HomePageState extends ConsumerState<HomePage> {
           children: [
             Text(
               name == null || name.isEmpty ? 'Olá!' : 'Olá, $name',
-              style: textTheme.headlineSmall,
+              style: textTheme.headlineSmall?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
             ),
-            const SizedBox(height: AppSpacing.itemGap),
-            FilledButton(
-              onPressed: () => context.push(AppRoutes.recording),
-              child: const Text('Iniciar atividade'),
+            const SizedBox(height: 4),
+            Text(
+              'Pronto para o treino de hoje?',
+              style: textTheme.bodyMedium?.copyWith(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
+            ),
+            const SizedBox(height: AppSpacing.itemGap * 1.5),
+            _StartActivityHeroCard(
+              onTap: () => context.push(AppRoutes.recording),
             ),
             const SizedBox(height: AppSpacing.screenPadding),
             ...activities.when<List<Widget>>(
@@ -143,7 +160,12 @@ class _HomePageState extends ConsumerState<HomePage> {
                 ),
               ],
               data: (items) => [
-                Text('Esta semana', style: textTheme.titleMedium),
+                Text(
+                  'Esta semana',
+                  style: textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
                 const SizedBox(height: AppSpacing.itemGap),
                 StatisticsView(
                   statistics: StatisticsCalculator.calculate(
@@ -158,6 +180,85 @@ class _HomePageState extends ConsumerState<HomePage> {
               ],
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+class _StartActivityHeroCard extends StatelessWidget {
+  const _StartActivityHeroCard({required this.onTap});
+
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [AppColors.primary, AppColors.primaryStrong],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.primary.withValues(alpha: 0.3),
+            blurRadius: 16,
+            offset: const Offset(0, 6),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(20),
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.2),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.play_arrow_rounded,
+                    color: Colors.white,
+                    size: 32,
+                  ),
+                ),
+                const SizedBox(width: 16),
+                const Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Iniciar atividade',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 18,
+                        ),
+                      ),
+                      SizedBox(height: 2),
+                      Text(
+                        'Gravar corrida, caminhada ou treino',
+                        style: TextStyle(color: Colors.white70, fontSize: 13),
+                      ),
+                    ],
+                  ),
+                ),
+                const Icon(
+                  Icons.arrow_forward_ios_rounded,
+                  color: Colors.white,
+                  size: 20,
+                ),
+              ],
+            ),
+          ),
         ),
       ),
     );
@@ -179,15 +280,30 @@ class _RecentActivities extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Text(
-          'Últimas atividades',
-          style: Theme.of(context).textTheme.titleMedium,
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              'Últimas atividades',
+              style: Theme.of(
+                context,
+              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+            ),
+            if (items.isNotEmpty)
+              TextButton(
+                onPressed: () => context.go(AppRoutes.history),
+                child: const Text('Ver histórico'),
+              ),
+          ],
         ),
         const SizedBox(height: AppSpacing.itemGap),
         if (recent.isEmpty)
-          const Text(
-            'Você ainda não registrou nenhuma atividade.',
-            textAlign: TextAlign.center,
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: 24),
+            child: Text(
+              'Você ainda não registrou nenhuma atividade.',
+              textAlign: TextAlign.center,
+            ),
           )
         else ...[
           for (final summary in recent)
@@ -198,10 +314,6 @@ class _RecentActivities extends StatelessWidget {
                 AppRoutes.activityDetails(summary.id.toString()),
               ),
             ),
-          TextButton(
-            onPressed: () => context.go(AppRoutes.history),
-            child: const Text('Ver histórico'),
-          ),
         ],
       ],
     );

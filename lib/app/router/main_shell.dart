@@ -19,7 +19,11 @@ class MainShell extends StatelessWidget {
             selectedIcon: Icon(Icons.home),
             label: 'Início',
           ),
-          NavigationDestination(icon: Icon(Icons.history), label: 'Histórico'),
+          NavigationDestination(
+            icon: Icon(Icons.directions_run_outlined),
+            selectedIcon: Icon(Icons.directions_run),
+            label: 'Histórico',
+          ),
           NavigationDestination(
             icon: Icon(Icons.person_outline),
             selectedIcon: Icon(Icons.person),

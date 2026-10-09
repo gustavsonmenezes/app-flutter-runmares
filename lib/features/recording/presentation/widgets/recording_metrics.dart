@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:runmares/core/constants/app_spacing.dart';
+import 'package:runmares/app/theme/app_colors.dart';
 import 'package:runmares/core/formatters/distance_unit.dart';
 import 'package:runmares/core/formatters/metric_formatters.dart';
 
@@ -25,44 +25,64 @@ class RecordingMetrics extends StatelessWidget {
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
 
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Text(
-          MetricFormatters.distance(distanceMeters, unit),
-          style: textTheme.displayMedium?.copyWith(fontWeight: FontWeight.bold),
-        ),
-        Text(unit.label, style: textTheme.titleMedium),
-        const SizedBox(height: AppSpacing.screenPadding),
-        Row(
-          children: [
-            Expanded(
-              child: _MetricItem(
-                label: 'Tempo',
-                value: MetricFormatters.duration(elapsed),
-              ),
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Theme.of(context).colorScheme.outline),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            'DISTÂNCIA (${unit.label.toUpperCase()})',
+            style: textTheme.labelSmall?.copyWith(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+              letterSpacing: 1,
+              fontWeight: FontWeight.bold,
             ),
-            if (showCurrentPace)
+          ),
+          const SizedBox(height: 2),
+          Text(
+            MetricFormatters.distance(distanceMeters, unit),
+            style: textTheme.displayLarge?.copyWith(
+              fontWeight: FontWeight.w900,
+              fontSize: 42,
+              color: AppColors.primary,
+            ),
+          ),
+          const SizedBox(height: 8),
+          const Divider(height: 1),
+          const SizedBox(height: 8),
+          Row(
+            children: [
               Expanded(
                 child: _MetricItem(
-                  label: 'Atual (min/${unit.label})',
-                  value: MetricFormatters.pace(
-                    currentPaceSecondsPerKilometer,
-                    unit,
-                  ),
+                  label: 'TEMPO',
+                  value: MetricFormatters.duration(elapsed),
                 ),
               ),
-            Expanded(
-              child: _MetricItem(
-                label: showCurrentPace
-                    ? 'Médio (min/${unit.label})'
-                    : 'Ritmo (min/${unit.label})',
-                value: MetricFormatters.pace(paceSecondsPerKilometer, unit),
+              if (showCurrentPace)
+                Expanded(
+                  child: _MetricItem(
+                    label: 'PACE ATUAL',
+                    value: MetricFormatters.pace(
+                      currentPaceSecondsPerKilometer,
+                      unit,
+                    ),
+                  ),
+                ),
+              Expanded(
+                child: _MetricItem(
+                  label: showCurrentPace ? 'PACE MÉDIO' : 'RITMO MÉDIO',
+                  value: MetricFormatters.pace(paceSecondsPerKilometer, unit),
+                ),
               ),
-            ),
-          ],
-        ),
-      ],
+            ],
+          ),
+        ],
+      ),
     );
   }
 }
@@ -81,11 +101,17 @@ class _MetricItem extends StatelessWidget {
       children: [
         Text(
           value,
-          style: textTheme.headlineMedium?.copyWith(
-            fontWeight: FontWeight.bold,
-          ),
+          style: textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
         ),
-        Text(label, style: textTheme.bodyMedium, textAlign: TextAlign.center),
+        const SizedBox(height: 2),
+        Text(
+          label,
+          style: textTheme.labelSmall?.copyWith(
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+            letterSpacing: 0.5,
+          ),
+          textAlign: TextAlign.center,
+        ),
       ],
     );
   }

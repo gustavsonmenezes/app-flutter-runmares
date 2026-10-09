@@ -81,6 +81,7 @@ class SettingsPage extends ConsumerWidget {
   String _styleName(MapStyle style) {
     return switch (style) {
       MapStyle.standard => 'Padrão',
+      MapStyle.dark => 'Escuro (Strava)',
       MapStyle.topographic => 'Topográfico',
     };
   }

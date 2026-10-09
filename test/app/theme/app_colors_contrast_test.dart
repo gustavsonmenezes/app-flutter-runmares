@@ -15,6 +15,8 @@ double _contrast(Color first, Color second) {
 }
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+
   group('text contrast', () {
     test('the primary text is readable on the app surfaces', () {
       expect(
@@ -62,7 +64,7 @@ void main() {
       final theme = AppTheme.light;
 
       expect(theme.colorScheme.primary, AppColors.primary);
-      expect(theme.scaffoldBackgroundColor, AppColors.background);
+      expect(theme.scaffoldBackgroundColor, AppColors.backgroundLight);
     });
 
     test('keeps the numbers heavier than the body text', () {
