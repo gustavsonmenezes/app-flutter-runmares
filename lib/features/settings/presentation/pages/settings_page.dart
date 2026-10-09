@@ -61,6 +61,18 @@ class SettingsPage extends ConsumerWidget {
               style: textTheme.bodySmall,
             ),
             const SizedBox(height: AppSpacing.screenPadding),
+            Text('Áudio e Feedback', style: textTheme.titleMedium),
+            const SizedBox(height: AppSpacing.itemGap),
+            SwitchListTile(
+              contentPadding: EdgeInsets.zero,
+              title: const Text('Anúncios por voz durante o treino'),
+              subtitle: const Text(
+                'Narra a distância, tempo e pace a cada 1 km',
+              ),
+              value: settings.audioAnnouncementsEnabled,
+              onChanged: controller.toggleAudioAnnouncements,
+            ),
+            const SizedBox(height: AppSpacing.screenPadding),
             FilledButton(
               onPressed: () => ref.read(authRepositoryProvider).signOut(),
               child: const Text('Sair'),

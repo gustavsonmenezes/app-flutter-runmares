@@ -50,6 +50,7 @@ dependencies:
   flutter_animate: ^4.5.2
   wakelock_plus: ^1.2.8
   firebase_ai: ^4.0.0
+  flutter_tts: ^4.2.0
 
 dev_dependencies:
   flutter_test:
