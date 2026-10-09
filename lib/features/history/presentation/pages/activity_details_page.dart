@@ -5,6 +5,7 @@ import 'package:runmares/core/formatters/distance_unit.dart';
 import 'package:runmares/core/formatters/metric_formatters.dart';
 import 'package:runmares/core/widgets/map_style.dart';
 import 'package:runmares/core/widgets/route_map.dart';
+import 'package:runmares/features/ai_coach/presentation/widgets/ai_coach_card.dart';
 import 'package:runmares/features/history/domain/activity_details.dart';
 import 'package:runmares/features/history/presentation/providers/history_providers.dart';
 import 'package:runmares/features/recording/domain/pace_calculator.dart';
@@ -65,7 +66,7 @@ class _DetailsContent extends StatelessWidget {
   Widget build(BuildContext context) {
     final summary = details.summary;
 
-    return Padding(
+    return SingleChildScrollView(
       padding: const EdgeInsets.all(AppSpacing.screenPadding),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -74,10 +75,13 @@ class _DetailsContent extends StatelessWidget {
             '${summary.type.label} · '
             '${MetricFormatters.dateTime(summary.startedAt)}',
             textAlign: TextAlign.center,
-            style: Theme.of(context).textTheme.titleMedium,
+            style: Theme.of(
+              context,
+            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: AppSpacing.itemGap),
-          Expanded(
+          SizedBox(
+            height: 240,
             child: ClipRRect(
               borderRadius: BorderRadius.circular(AppSpacing.mapCornerRadius),
               child: RouteMap(
@@ -97,6 +101,8 @@ class _DetailsContent extends StatelessWidget {
               elapsed: summary.duration,
             ),
           ),
+          const SizedBox(height: AppSpacing.screenPadding),
+          AiCoachCard(details: details),
         ],
       ),
     );

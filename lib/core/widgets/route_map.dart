@@ -9,14 +9,14 @@ class RouteMap extends StatefulWidget {
     required this.segments,
     this.followLastPoint = false,
     this.fitRoute = false,
-    this.style = MapStyle.standard,
+    this.style,
     super.key,
   });
 
   final List<List<LatLng>> segments;
   final bool followLastPoint;
   final bool fitRoute;
-  final MapStyle style;
+  final MapStyle? style;
 
   @override
   State<RouteMap> createState() => _RouteMapState();
@@ -58,14 +58,17 @@ class _RouteMapState extends State<RouteMap> {
   @override
   Widget build(BuildContext context) {
     final points = [for (final segment in widget.segments) ...segment];
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final mapStyle =
+        widget.style ?? (isDark ? MapStyle.dark : MapStyle.standard);
 
     return FlutterMap(
       mapController: _controller,
       options: _buildOptions(points),
       children: [
         TileLayer(
-          urlTemplate: widget.style.urlTemplate,
-          maxNativeZoom: widget.style.maxNativeZoom,
+          urlTemplate: mapStyle.urlTemplate,
+          maxNativeZoom: mapStyle.maxNativeZoom,
           userAgentPackageName: _userAgentPackage,
         ),
         PolylineLayer(
@@ -75,13 +78,13 @@ class _RouteMapState extends State<RouteMap> {
                 Polyline(
                   points: segment,
                   strokeWidth: _routeWidth,
-                  color: AppColors.secondary,
+                  color: AppColors.primary,
                 ),
           ],
         ),
         MarkerLayer(markers: _buildMarkers(points)),
         RichAttributionWidget(
-          attributions: [TextSourceAttribution(widget.style.attribution)],
+          attributions: [TextSourceAttribution(mapStyle.attribution)],
         ),
       ],
     );

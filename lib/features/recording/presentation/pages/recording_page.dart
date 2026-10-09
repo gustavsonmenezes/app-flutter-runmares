@@ -14,6 +14,7 @@ import 'package:runmares/features/recording/presentation/widgets/notification_pe
 import 'package:runmares/features/recording/presentation/widgets/recording_controls.dart';
 import 'package:runmares/features/recording/presentation/widgets/recording_metrics.dart';
 import 'package:runmares/features/settings/presentation/providers/settings_providers.dart';
+import 'package:wakelock_plus/wakelock_plus.dart';
 
 class RecordingPage extends ConsumerStatefulWidget {
   const RecordingPage({super.key});
@@ -41,6 +42,12 @@ class _RecordingPageState extends ConsumerState<RecordingPage> {
   }
 
   @override
+  void dispose() {
+    WakelockPlus.disable();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final state = ref.watch(recordingControllerProvider);
     final controller = ref.read(recordingControllerProvider.notifier);
@@ -53,6 +60,14 @@ class _RecordingPageState extends ConsumerState<RecordingPage> {
     final showNotificationNotice =
         notificationPermission != null &&
         notificationPermission != NotificationPermission.granted;
+
+    // Gerenciar Wakelock com base no status do treino
+    if (state.status == RecordingStatus.recording) {
+      WakelockPlus.enable();
+    } else if (state.status == RecordingStatus.idle ||
+        state.status == RecordingStatus.finished) {
+      WakelockPlus.disable();
+    }
 
     return Scaffold(
       appBar: AppBar(title: const Text('Gravar atividade')),
@@ -90,7 +105,9 @@ class _RecordingPageState extends ConsumerState<RecordingPage> {
             Text(
               _statusMessage(state.status),
               textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.titleLarge,
+              style: Theme.of(
+                context,
+              ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
             ),
             if (saveMessage != null) ...[
               const SizedBox(height: AppSpacing.itemGap),
