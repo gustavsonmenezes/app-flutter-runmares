@@ -6,6 +6,7 @@ import 'package:runmares/core/widgets/map_style.dart';
 import 'package:runmares/core/widgets/route_map.dart';
 import 'package:runmares/features/history/domain/activity_details.dart';
 import 'package:runmares/features/recording/domain/pace_calculator.dart';
+import 'package:runmares/features/recording/domain/pace_color_calculator.dart';
 import 'package:runmares/features/recording/presentation/extensions/activity_type_presentation.dart';
 import 'package:runmares/features/recording/presentation/extensions/route_segments_extension.dart';
 
@@ -30,6 +31,7 @@ class ShareableActivityCard extends StatelessWidget {
     );
     final pace = MetricFormatters.pace(avgPaceSec, unit);
     final formattedDate = MetricFormatters.dateTime(summary.startedAt);
+    final coloredSegments = PaceColorCalculator.calculateSegments(details.segments);
 
     return Container(
       width: 360,
@@ -93,6 +95,8 @@ class ShareableActivityCard extends StatelessWidget {
               height: 200,
               child: RouteMap(
                 segments: details.segments.toLatLngSegments(),
+                coloredSegments: coloredSegments,
+                showPaceLegend: true,
                 fitRoute: true,
                 style: MapStyle.dark,
               ),

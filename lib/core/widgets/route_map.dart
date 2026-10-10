@@ -3,10 +3,13 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:runmares/app/theme/app_colors.dart';
 import 'package:runmares/core/widgets/map_style.dart';
+import 'package:runmares/features/recording/domain/colored_route_segment.dart';
 
 class RouteMap extends StatefulWidget {
   const RouteMap({
     required this.segments,
+    this.coloredSegments,
+    this.showPaceLegend = false,
     this.followLastPoint = false,
     this.fitRoute = false,
     this.style,
@@ -14,6 +17,8 @@ class RouteMap extends StatefulWidget {
   });
 
   final List<List<LatLng>> segments;
+  final List<ColoredRouteSegment>? coloredSegments;
+  final bool showPaceLegend;
   final bool followLastPoint;
   final bool fitRoute;
   final MapStyle? style;
@@ -61,31 +66,48 @@ class _RouteMapState extends State<RouteMap> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final mapStyle =
         widget.style ?? (isDark ? MapStyle.dark : MapStyle.standard);
+    final hasColoredSegments =
+        widget.coloredSegments != null && widget.coloredSegments!.isNotEmpty;
 
-    return FlutterMap(
-      mapController: _controller,
-      options: _buildOptions(points),
+    return Stack(
       children: [
-        TileLayer(
-          urlTemplate: mapStyle.urlTemplate,
-          maxNativeZoom: mapStyle.maxNativeZoom,
-          userAgentPackageName: _userAgentPackage,
-        ),
-        PolylineLayer(
-          polylines: [
-            for (final segment in widget.segments)
-              if (segment.length > 1)
-                Polyline(
-                  points: segment,
-                  strokeWidth: _routeWidth,
-                  color: AppColors.primary,
-                ),
+        FlutterMap(
+          mapController: _controller,
+          options: _buildOptions(points),
+          children: [
+            TileLayer(
+              urlTemplate: mapStyle.urlTemplate,
+              maxNativeZoom: mapStyle.maxNativeZoom,
+              userAgentPackageName: _userAgentPackage,
+            ),
+            PolylineLayer(
+              polylines: [
+                if (hasColoredSegments)
+                  for (final coloredSeg in widget.coloredSegments!)
+                    if (coloredSeg.points.length > 1)
+                      Polyline(
+                        points: coloredSeg.points,
+                        strokeWidth: _routeWidth,
+                        color: coloredSeg.color,
+                      )
+                else
+                  for (final segment in widget.segments)
+                    if (segment.length > 1)
+                      Polyline(
+                        points: segment,
+                        strokeWidth: _routeWidth,
+                        color: AppColors.primary,
+                      ),
+              ],
+            ),
+            MarkerLayer(markers: _buildMarkers(points)),
+            RichAttributionWidget(
+              attributions: [TextSourceAttribution(mapStyle.attribution)],
+            ),
           ],
         ),
-        MarkerLayer(markers: _buildMarkers(points)),
-        RichAttributionWidget(
-          attributions: [TextSourceAttribution(mapStyle.attribution)],
-        ),
+        if (widget.showPaceLegend && hasColoredSegments)
+          const _PaceLegendOverlay(),
       ],
     );
   }
@@ -150,6 +172,57 @@ class _PositionDot extends StatelessWidget {
         shape: BoxShape.circle,
         border: Border.all(color: Colors.white, width: _borderWidth),
       ),
+    );
+  }
+}
+
+class _PaceLegendOverlay extends StatelessWidget {
+  const _PaceLegendOverlay();
+
+  @override
+  Widget build(BuildContext context) {
+    return Positioned(
+      bottom: 8,
+      left: 8,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        decoration: BoxDecoration(
+          color: AppColors.surfaceDark.withValues(alpha: 0.85),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: AppColors.borderDark),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _legendDot(AppColors.accentSuccess, 'Rápido'),
+            const SizedBox(width: 8),
+            _legendDot(AppColors.accentWarning, 'Médio'),
+            const SizedBox(width: 8),
+            _legendDot(const Color(0xFFEF4444), 'Lento'),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _legendDot(Color color, String label) {
+    return Row(
+      children: [
+        Container(
+          width: 8,
+          height: 8,
+          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+        ),
+        const SizedBox(width: 4),
+        Text(
+          label,
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 10,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      ],
     );
   }
 }
