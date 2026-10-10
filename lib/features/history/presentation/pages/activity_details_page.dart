@@ -14,6 +14,7 @@ import 'package:runmares/features/history/domain/activity_details.dart';
 import 'package:runmares/features/history/presentation/providers/history_providers.dart';
 import 'package:runmares/features/history/presentation/widgets/shareable_activity_card.dart';
 import 'package:runmares/features/recording/domain/pace_calculator.dart';
+import 'package:runmares/features/recording/domain/pace_color_calculator.dart';
 import 'package:runmares/features/recording/presentation/extensions/activity_type_presentation.dart';
 import 'package:runmares/features/recording/presentation/extensions/route_segments_extension.dart';
 import 'package:runmares/features/recording/presentation/widgets/recording_metrics.dart';
@@ -128,6 +129,7 @@ class _DetailsContentState extends State<_DetailsContent> {
   @override
   Widget build(BuildContext context) {
     final summary = widget.details.summary;
+    final coloredSegments = PaceColorCalculator.calculateSegments(widget.details.segments);
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(AppSpacing.screenPadding),
@@ -149,6 +151,8 @@ class _DetailsContentState extends State<_DetailsContent> {
               borderRadius: BorderRadius.circular(AppSpacing.mapCornerRadius),
               child: RouteMap(
                 segments: widget.details.segments.toLatLngSegments(),
+                coloredSegments: coloredSegments,
+                showPaceLegend: true,
                 fitRoute: true,
                 style: widget.mapStyle,
               ),

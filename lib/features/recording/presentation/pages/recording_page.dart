@@ -5,6 +5,7 @@ import 'package:runmares/core/widgets/route_map.dart';
 import 'package:runmares/features/recording/data/notification_permission_service_provider.dart';
 import 'package:runmares/features/recording/domain/activity_save_status.dart';
 import 'package:runmares/features/recording/domain/notification_permission_service.dart';
+import 'package:runmares/features/recording/domain/pace_color_calculator.dart';
 import 'package:runmares/features/recording/domain/recording_status.dart';
 import 'package:runmares/features/recording/presentation/controllers/recording_controller.dart';
 import 'package:runmares/features/recording/presentation/extensions/route_segments_extension.dart';
@@ -69,6 +70,8 @@ class _RecordingPageState extends ConsumerState<RecordingPage> {
       WakelockPlus.disable();
     }
 
+    final coloredSegments = PaceColorCalculator.calculateSegments(state.routeSegments);
+
     return Scaffold(
       appBar: AppBar(title: const Text('Gravar atividade')),
       body: Padding(
@@ -86,6 +89,8 @@ class _RecordingPageState extends ConsumerState<RecordingPage> {
                 borderRadius: BorderRadius.circular(AppSpacing.mapCornerRadius),
                 child: RouteMap(
                   segments: state.routeSegments.toLatLngSegments(),
+                  coloredSegments: coloredSegments,
+                  showPaceLegend: true,
                   followLastPoint: true,
                   style: mapStyle,
                 ),
