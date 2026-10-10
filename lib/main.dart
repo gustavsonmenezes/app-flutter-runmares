@@ -1,5 +1,6 @@
 import 'dart:ui';
 
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -27,6 +28,9 @@ Future<void> main() async {
     await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,
     );
+    // Encerra qualquer sessão mantida em cache ao abrir o app,
+    // garantindo que ele sempre inicie na Tela de Login com a Splash Animada.
+    await FirebaseAuth.instance.signOut();
   } catch (e) {
     debugPrint('Aviso: Erro ao inicializar Firebase: $e');
   }

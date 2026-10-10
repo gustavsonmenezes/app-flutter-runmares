@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:runmares/core/formatters/distance_unit.dart';
 import 'package:runmares/core/widgets/map_style.dart';
@@ -21,6 +22,10 @@ final audioAnnouncementsEnabledProvider = Provider<bool>(
       ref.watch(settingsProvider.select((s) => s.audioAnnouncementsEnabled)),
 );
 
+final themeModeProvider = Provider<ThemeMode>(
+  (ref) => ref.watch(settingsProvider.select((s) => s.themeMode)),
+);
+
 class SettingsController extends Notifier<AppSettings> {
   @override
   AppSettings build() => ref.read(settingsRepositoryProvider).load();
@@ -35,6 +40,10 @@ class SettingsController extends Notifier<AppSettings> {
 
   Future<void> toggleAudioAnnouncements(bool enabled) {
     return _update(state.copyWith(audioAnnouncementsEnabled: enabled));
+  }
+
+  Future<void> selectThemeMode(ThemeMode mode) {
+    return _update(state.copyWith(themeMode: mode));
   }
 
   Future<void> _update(AppSettings next) async {

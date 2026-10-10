@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:runmares/core/formatters/distance_unit.dart';
 import 'package:runmares/core/widgets/map_style.dart';
 import 'package:runmares/features/settings/domain/app_settings.dart';
@@ -10,6 +11,7 @@ class SharedPreferencesSettingsRepository implements SettingsRepository {
   static const String _distanceUnitKey = 'distance_unit';
   static const String _mapStyleKey = 'map_style';
   static const String _audioAnnouncementsKey = 'audio_announcements';
+  static const String _themeModeKey = 'theme_mode';
 
   final SharedPreferences _preferences;
 
@@ -24,6 +26,7 @@ class SharedPreferencesSettingsRepository implements SettingsRepository {
       mapStyle: _read(MapStyle.values, _mapStyleKey, MapStyle.standard),
       audioAnnouncementsEnabled:
           _preferences.getBool(_audioAnnouncementsKey) ?? true,
+      themeMode: _read(ThemeMode.values, _themeModeKey, ThemeMode.dark),
     );
   }
 
@@ -35,6 +38,7 @@ class SharedPreferencesSettingsRepository implements SettingsRepository {
       _audioAnnouncementsKey,
       settings.audioAnnouncementsEnabled,
     );
+    await _preferences.setString(_themeModeKey, settings.themeMode.name);
   }
 
   // Um valor desconhecido (por exemplo, de uma versão futura) volta ao padrão.

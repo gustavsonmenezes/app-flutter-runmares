@@ -1,5 +1,9 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:runmares/app/theme/app_colors.dart';
 import 'package:runmares/core/constants/app_spacing.dart';
 import 'package:runmares/core/formatters/distance_unit.dart';
 import 'package:runmares/core/formatters/metric_formatters.dart';
@@ -8,11 +12,14 @@ import 'package:runmares/core/widgets/route_map.dart';
 import 'package:runmares/features/ai_coach/presentation/widgets/ai_coach_card.dart';
 import 'package:runmares/features/history/domain/activity_details.dart';
 import 'package:runmares/features/history/presentation/providers/history_providers.dart';
+import 'package:runmares/features/history/presentation/widgets/shareable_activity_card.dart';
 import 'package:runmares/features/recording/domain/pace_calculator.dart';
 import 'package:runmares/features/recording/presentation/extensions/activity_type_presentation.dart';
 import 'package:runmares/features/recording/presentation/extensions/route_segments_extension.dart';
 import 'package:runmares/features/recording/presentation/widgets/recording_metrics.dart';
 import 'package:runmares/features/settings/presentation/providers/settings_providers.dart';
+import 'package:screenshot/screenshot.dart';
+import 'package:share_plus/share_plus.dart';
 
 class ActivityDetailsPage extends ConsumerWidget {
   const ActivityDetailsPage({required this.activityId, super.key});
@@ -51,7 +58,7 @@ class ActivityDetailsPage extends ConsumerWidget {
   }
 }
 
-class _DetailsContent extends StatelessWidget {
+class _DetailsContent extends StatefulWidget {
   const _DetailsContent({
     required this.details,
     required this.unit,
@@ -63,8 +70,64 @@ class _DetailsContent extends StatelessWidget {
   final MapStyle mapStyle;
 
   @override
+  State<_DetailsContent> createState() => _DetailsContentState();
+}
+
+class _DetailsContentState extends State<_DetailsContent> {
+  final ScreenshotController _screenshotController = ScreenshotController();
+  bool _isSharing = false;
+
+  Future<void> _shareCard() async {
+    if (_isSharing) return;
+    setState(() => _isSharing = true);
+
+    try {
+      final imageBytes = await _screenshotController.captureFromWidget(
+        Material(
+          color: Colors.transparent,
+          child: ShareableActivityCard(
+            details: widget.details,
+            unit: widget.unit,
+          ),
+        ),
+        delay: const Duration(milliseconds: 100),
+      );
+
+      final tempDir = await getTemporaryDirectory();
+      final file = await File(
+        '${tempDir.path}/runmares_activity_${widget.details.summary.id}.png',
+      ).create();
+      await file.writeAsBytes(imageBytes);
+
+      await SharePlus.instance.share(
+        ShareParams(
+          files: [
+            XFile(
+              file.path,
+              mimeType: 'image/png',
+              name: 'runmares_treino.png',
+            ),
+          ],
+          subject: 'Treino no RunMares 🏃',
+          text: 'Confira meu treino no RunMares! 🏃🔥',
+        ),
+      );
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Não foi possível gerar a imagem de compartilhamento.'),
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isSharing = false);
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final summary = details.summary;
+    final summary = widget.details.summary;
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(AppSpacing.screenPadding),
@@ -85,9 +148,9 @@ class _DetailsContent extends StatelessWidget {
             child: ClipRRect(
               borderRadius: BorderRadius.circular(AppSpacing.mapCornerRadius),
               child: RouteMap(
-                segments: details.segments.toLatLngSegments(),
+                segments: widget.details.segments.toLatLngSegments(),
                 fitRoute: true,
-                style: mapStyle,
+                style: widget.mapStyle,
               ),
             ),
           ),
@@ -95,14 +158,41 @@ class _DetailsContent extends StatelessWidget {
           RecordingMetrics(
             distanceMeters: summary.distanceMeters,
             elapsed: summary.duration,
-            unit: unit,
+            unit: widget.unit,
             paceSecondsPerKilometer: PaceCalculator.secondsPerKilometer(
               distanceMeters: summary.distanceMeters,
               elapsed: summary.duration,
             ),
           ),
           const SizedBox(height: AppSpacing.screenPadding),
-          AiCoachCard(details: details),
+          AiCoachCard(details: widget.details),
+          const SizedBox(height: AppSpacing.screenPadding),
+          SizedBox(
+            height: 52,
+            child: FilledButton.icon(
+              onPressed: _isSharing ? null : _shareCard,
+              icon: _isSharing
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
+                    )
+                  : const Icon(Icons.share_rounded),
+              label: const Text(
+                'Compartilhar Treino',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              ),
+              style: FilledButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+              ),
+            ),
+          ),
         ],
       ),
     );
