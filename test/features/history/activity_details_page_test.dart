@@ -66,6 +66,7 @@ void main() {
     expect(find.text('5,23'), findsOneWidget);
     expect(find.text('32:10'), findsOneWidget);
     expect(find.text('6:09'), findsOneWidget);
+    expect(find.text('Compartilhar Treino'), findsOneWidget);
   });
 
   testWidgets('shows a message for an unknown activity', (tester) async {
