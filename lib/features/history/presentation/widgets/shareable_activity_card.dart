@@ -9,16 +9,19 @@ import 'package:runmares/features/recording/domain/pace_calculator.dart';
 import 'package:runmares/features/recording/domain/pace_color_calculator.dart';
 import 'package:runmares/features/recording/presentation/extensions/activity_type_presentation.dart';
 import 'package:runmares/features/recording/presentation/extensions/route_segments_extension.dart';
+import 'package:runmares/features/weather/domain/weather_info.dart';
 
 class ShareableActivityCard extends StatelessWidget {
   const ShareableActivityCard({
     required this.details,
     this.unit = DistanceUnit.kilometers,
+    this.weatherInfo,
     super.key,
   });
 
   final ActivityDetails details;
   final DistanceUnit unit;
+  final WeatherInfo? weatherInfo;
 
   @override
   Widget build(BuildContext context) {
@@ -128,7 +131,9 @@ class ShareableActivityCard extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                formattedDate,
+                weatherInfo != null
+                    ? '${weatherInfo!.emoji} ${weatherInfo!.temperatureC.round()}°C · $formattedDate'
+                    : formattedDate,
                 style: const TextStyle(
                   color: AppColors.textSecondaryDark,
                   fontSize: 11,
