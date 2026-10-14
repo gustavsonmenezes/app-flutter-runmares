@@ -1,8 +1,8 @@
 # 🏃 RunMares
 
-Aplicativo mobile de rastreamento de atividades físicas (corrida, caminhada e bicicleta), desenvolvido em **Flutter**.
+Aplicativo mobile de rastreamento de atividades físicas (corrida, caminhada e bicicleta), desenvolvido em **Flutter** com design profissional inspirado no **Strava** e suporte a **Coach Virtual por Inteligência Artificial (Google Gemini)**.
 
-O RunMares registra o percurso do usuário por **GPS**, calcula distância, tempo e ritmo em tempo real, desenha o trajeto no mapa e guarda tudo no aparelho, para funcionar mesmo **sem internet**. Quando há conexão, as atividades são sincronizadas com a nuvem.
+O RunMares registra o percurso do usuário por **GPS**, calcula distância, tempo e ritmo em tempo real, desenha o trajeto no mapa com **mapa de calor por velocidade (Pace Heatmap)**, narra os marcos de quilometragem por voz (**Audio Cues em Português**) e guarda tudo no aparelho para funcionar **100% offline**. Quando há conexão, as atividades são sincronizadas com a nuvem e enriquecidas com **dados de clima da Open-Meteo API**.
 
 > Projeto da disciplina **Desenvolvimento Mobile** (Projeto 1.1 – Proposta do Aplicativo).
 
@@ -18,117 +18,115 @@ O RunMares registra o percurso do usuário por **GPS**, calcula distância, temp
 
 ---
 
-## 🎯 Problema e proposta
+## 🎯 Problema e Proposta
 
-Muitas pessoas querem acompanhar a evolução nos treinos, mas dependem de apps que exigem internet constante ou são complexos demais. Em parques, áreas rurais e trilhas, com sinal fraco, o registro de um treino pode falhar. O RunMares oferece um registro simples e confiável de atividades, com foco em **funcionamento offline** e **estatísticas claras**.
+Muitas pessoas querem acompanhar a evolução nos treinos, mas dependem de apps que exigem internet constante ou são complexos demais. Em parques, áreas rurais e trilhas com sinal fraco, o registro de um treino pode falhar. O RunMares oferece um registro simples, confiável e profissional de atividades, com foco em **funcionamento offline**, **estatísticas claras** e **análise personalizada por IA**.
 
 - **Público-alvo:** corredores, caminhantes e ciclistas iniciantes ou amadores.
-- **Diferencial:** gravação e consulta de atividades sem depender de conexão.
+- **Diferencial:** gravação e consulta offline, mapas Mapbox HD, Pace Heatmap, narração por voz a cada km, estatísticas visuais e Coach de IA sem custos.
 
 ---
 
-## ✅ Funcionalidades
+## ✅ Funcionalidades Implementadas
 
 | ID | Funcionalidade | Situação |
 |---|---|---|
 | RF01 | Cadastro, login e sessão (e-mail e senha) | Implementado |
 | RF02 | Iniciar, pausar, retomar e finalizar uma atividade | Implementado |
-| RF03 | Distância, tempo e ritmo médio em tempo real | Implementado |
-| RF04 | Trajeto no mapa, ao vivo e depois de finalizada a atividade | Implementado |
-| RF05 | Salvar no aparelho, sincronizar com a nuvem e recuperar atividade interrompida | Implementado |
-| RF06 | Listar o histórico e ver os detalhes de cada atividade | Implementado |
-| RF07 | Estatísticas semanais e mensais | Implementado |
-
-Além dos requisitos, o app tem uma tela **Início** com o resumo da semana e as últimas atividades.
-
-### Como cada parte funciona
-
-- **Gravação:** o GPS é lido continuamente. Pontos imprecisos (precisão pior que 25 m), saltos impossíveis (acima de 72 km/h) e tremidas menores que 3 m são descartados. Cada pausa abre um trecho novo, para o deslocamento durante a pausa não entrar na conta. No Android, um serviço em primeiro plano (com notificação) mantém a gravação com a tela apagada.
-- **Armazenamento local:** a atividade e os pontos do trajeto são salvos em um banco SQLite (Drift), em uma única transação. Cada atividade pertence a um usuário, e o histórico mostra só as do usuário logado.
-- **Atividade interrompida:** durante a gravação, cada ponto aceito também vai para um rascunho no banco. Se o app for fechado no meio de uma atividade, a tela Início oferece salvar o que foi registrado.
-- **Sincronização:** as atividades pendentes são enviadas ao Cloud Firestore ao finalizar, ao abrir o app, a cada minuto e quando o app volta ao primeiro plano. O identificador de cada atividade é o horário de início, então reenviar não duplica. O histórico mostra se cada atividade já foi sincronizada.
-- **Estatísticas:** totais de distância, tempo e número de atividades por semana (segunda a domingo) ou por mês, com gráfico de barras. São calculadas do banco local, então não dependem de internet.
+| RF03 | Distância, tempo, ritmo médio (pace) e pace atual em tempo real | Implementado |
+| RF04 | Trajeto no mapa ao vivo e mapa de calor de velocidade (Pace Heatmap) | Implementado |
+| RF05 | Salvar no aparelho (Drift SQLite), sincronizar com a nuvem e recuperar rascunho de atividade interrompida | Implementado |
+| RF06 | Listar o histórico, ver detalhes, clima do treino e gerar cards para Instagram/WhatsApp | Implementado |
+| RF07 | Estatísticas semanais e mensais com gráficos em pílula (`fl_chart`) | Implementado |
+| RF08 | Coach de IA Pessoal (Google Gemini) com análise de treino e dicas de recuperação | Implementado |
+| RF09 | Audio Cues em Português (narração de distância, tempo e pace a cada 1 km via TTS) | Implementado |
+| RF10 | Seletor de Tema (Modo Escuro Strava / Modo Claro / Sistema) e Seletor de Mapa Mapbox | Implementado |
 
 ---
 
-## 🛠️ Tecnologias
+## 🚀 Diferenciais de Destaque do RunMares
 
-- **Flutter** (Dart). Testado com Flutter 3.41.3 e Dart 3.11.1.
-- **Recurso do dispositivo:** GPS (`geolocator`)
-- **API externa:** Firebase Authentication e Cloud Firestore
-- **Armazenamento local:** SQLite com Drift
-- **Mapa:** `flutter_map` com tiles do OpenStreetMap
+- 🤖 **Coach de IA Pessoal (Google Gemini)**: Analisa o ritmo, distância e esforço do treino para gerar feedbacks humanos, motivacionais e dicas de recuperação pós-treino (100% gratuito e com fallback offline).
+- 🎙️ **Audio Cues (Feedback por Voz)**: Narração em português do Brasil a cada quilômetro completado (`flutter_tts`) para treino de olhos livres.
+- 🗺️ **Pace Heatmap & Mapbox HD**: A rota no mapa é colorida dinamicamente pela velocidade (Verde = Rápido, Laranja = Médio, Vermelho = Lento) com estilos Mapbox (Escuro, Terreno e Satélite).
+- 🌤️ **Clima e Temperatura da Corrida (Open-Meteo API)**: Registra automaticamente a temperatura (°C), vento e clima no momento do treino.
+- 📸 **Gerador de Cards para Redes Sociais**: Gera uma imagem estilizada da corrida formatada para os Stories do Instagram ou WhatsApp com 1 toque.
+- 🌙 **Design System Strava & Dark Mode**: Interface moderna em tom carbono (`#0F172A`), acentos em Laranja Strava (`#FC4C02`) e números tabulares (`FontFeature.tabularFigures()`).
 
-| Pacote | Uso |
+---
+
+## 🛠️ Tecnologias e Pacotes
+
+- **Flutter / Dart** (compatível com Android e iOS).
+- **Recursos do dispositivo:** GPS (`geolocator`), Síntese de Voz (`flutter_tts`), Wake Lock (`wakelock_plus`) e Notificação Foreground.
+- **APIs externas:** Google Gemini AI API (`google_generative_ai`), Open-Meteo Weather API (`http`), Mapbox Vector Tiles API (`flutter_map`) e Firebase Auth / Cloud Firestore.
+- **Armazenamento local:** SQLite tipado com **Drift**.
+- **Gráficos e Animações:** `fl_chart`, `flutter_animate`, `google_fonts`.
+- **Compartilhamento:** `share_plus`, `screenshot`, `path_provider`.
+
+| Pacote | Uso Principal |
 |---|---|
-| `geolocator` | Localização por GPS e serviço em primeiro plano |
-| `flutter_map`, `latlong2` | Mapa e trajeto |
-| `drift`, `drift_flutter` | Banco de dados local |
-| `firebase_core`, `firebase_auth`, `cloud_firestore` | Login e sincronização |
-| `flutter_riverpod` | Gerenciamento de estado |
-| `go_router` | Navegação e proteção das rotas |
+| `geolocator` | Rastreamento GPS e serviço em primeiro plano |
+| `flutter_map`, `latlong2` | Renderização de mapas com suporte a Mapbox |
+| `fl_chart` | Gráficos de barras interativos com gradiente |
+| `flutter_tts` | Narração por voz a cada 1 km em português |
+| `google_generative_ai` | Inteligência Artificial do Coach Virtual (Gemini) |
+| `http` | Consulta da API de clima Open-Meteo |
+| `drift`, `drift_flutter` | Banco de dados SQLite local (Offline-First) |
+| `firebase_core`, `firebase_auth`, `cloud_firestore` | Autenticação e sincronização na nuvem |
+| `flutter_riverpod` | Gerenciamento de estado reativo |
+| `go_router` | Navegação declarativa e proteção de rotas |
+| `wakelock_plus` | Manter a tela acesa durante a corrida |
+| `share_plus`, `screenshot` | Geração de imagem e compartilhamento nos Stories |
 
 ---
 
-## 📱 Telas
+## 📱 Telas do Aplicativo (8 Telas)
 
-1. Login e cadastro
-2. Início (resumo da semana e últimas atividades)
-3. Gravar atividade (mapa ao vivo, distância, tempo e ritmo)
-4. Histórico
-5. Detalhes da atividade (trajeto no mapa e métricas)
-6. Perfil e estatísticas (semana e mês)
-7. Configurações
+1. **Abertura / Splash Animada**: Logotipo do RunMares com efeito de iluminação e transição em *fade-out*.
+2. **Login**: Autenticação com e-mail e senha no Firebase.
+3. **Cadastro**: Criação de nova conta de atleta.
+4. **Início (Dashboard)**: Hero Card para iniciar treino, gráfico semanal em pílula e feed de corridas com cards estilo Strava.
+5. **Gravar Atividade (Recorder)**: Cronômetro tabular gigante, mapa ao vivo com Pace Heatmap, botão de recentralizar (🎯) e controle de pausar/finalizar.
+6. **Histórico**: Lista de todas as corridas gravadas com filtro e badge de status de sincronização.
+7. **Detalhes da Atividade**: Mapa de calor por ritmo, métricas completas, badge de clima (`🌤️ 24°C`), Card do Coach IA (Gemini) e botão de compartilhamento social.
+8. **Configurações**: Seletor de Tema (Claro / Escuro / Sistema), Unidade de medida (km / mi), Tipo de mapa (Mapbox), liga/desliga Audio Cues e logout.
+9. **Perfil**: Estatísticas acumuladas da conta do usuário.
 
 ---
 
-## 🗂️ Organização do código
-
-O código é organizado por funcionalidade. Cada uma tem as suas camadas (`domain`, `data` e `presentation`) quando precisa delas.
+## 🗂️ Organização do Código
 
 ```
 lib/
-├── main.dart
+├── main.dart            # Inicialização e captura de erros globais
 ├── firebase_options.dart
-├── app/                 # App, tema e rotas
+├── app/                 # Configuração de temas, cores, tipografia e rotas
 │   ├── router/
 │   └── theme/
-├── core/                # Código compartilhado
+├── core/                # Componentes globais e banco de dados
 │   ├── constants/
-│   ├── database/        # Banco Drift (tabelas e migrações)
+│   ├── database/        # Banco SQLite com Drift (tabelas e migrações)
 │   ├── formatters/
-│   └── widgets/         # Mapa reutilizável
+│   └── widgets/         # Mapa reutilizável com suporte a Mapbox e Pace Heatmap
 └── features/
-    ├── auth/            # Login, cadastro e sessão
-    ├── history/         # Histórico e detalhes
-    ├── home/            # Tela Início
-    ├── profile/         # Perfil
-    ├── recording/       # Gravação, GPS e rascunho
-    ├── settings/        # Configurações
-    ├── statistics/      # Estatísticas
-    └── sync/            # Sincronização com o Firestore
+    ├── ai_coach/        # Coach de Inteligência Artificial (Gemini + Local Engine)
+    ├── auth/            # Login, cadastro, sessão e Splash animada
+    ├── history/         # Histórico, detalhes e Card de Compartilhamento Social
+    ├── home/            # Dashboard inicial e resumo semanal
+    ├── profile/         # Perfil e estatísticas
+    ├── recording/       # Gravação GPS, Audio Cues (TTS), rascunho e controle
+    ├── settings/        # Configurações de tema, mapa, unidades e áudio
+    ├── statistics/      # Calculadora e gráficos `fl_chart`
+    ├── sync/            # Sincronização em segundo plano com o Firestore
+    └── weather/         # Consulta de clima/temperatura da Open-Meteo API
 
-test/                    # Espelha a estrutura de lib/
+test/                    # Mais de 180 testes automatizados
 ```
 
 ---
 
-## 🚀 Como rodar o projeto
-
-### Pré-requisitos
-
-- [Flutter SDK](https://docs.flutter.dev/get-started/install) (canal *stable*)
-- [Android Studio](https://developer.android.com/studio) com o plugin do Flutter e o Android SDK
-- Um **celular Android** com depuração USB ativada (recomendado) ou um emulador
-- Git
-
-Confira se está tudo certo:
-
-```bash
-flutter doctor
-```
-
-### Passo a passo
+## 🚀 Como Rodar o Projeto
 
 ```bash
 # 1. Clone o repositório
@@ -140,24 +138,13 @@ cd app-flutter-runmares
 # 3. Baixe as dependências
 flutter pub get
 
-# 4. Veja os dispositivos disponíveis
-flutter devices
-
-# 5. Rode o app
-flutter run
+# 4. Rode o aplicativo
+flutter run --dart-define=GEMINI_API_KEY="SUA_CHAVE_GEMINI"
 ```
 
-### Observações
+---
 
-- **O app já vem configurado para o projeto Firebase da equipe** (`android/app/google-services.json` e `lib/firebase_options.dart` estão no repositório). Essas chaves identificam o app e não são segredos: a proteção dos dados está nas regras de segurança do Firestore (veja abaixo). Para usar outro projeto Firebase, rode `flutterfire configure`.
-- **O primeiro login precisa de internet.** Depois, a sessão fica salva e o app abre offline.
-- **O mapa precisa de internet** para baixar o fundo. O trajeto, as métricas e o histórico funcionam sem conexão, mas sem sinal o fundo do mapa fica cinza.
-- **Teste o GPS em um celular real.** O emulador simula rotas, mas não representa bem o GPS, a bateria nem a gravação com a tela apagada.
-- Ao abrir a gravação pela primeira vez, **permita o acesso à localização**.
-- O arquivo `lib/core/database/app_database.g.dart` é gerado pelo Drift e fica no repositório. Só é preciso regerá-lo ao mudar as tabelas: `dart run build_runner build`.
-- **iOS:** as permissões estão no `Info.plist`, mas o Firebase foi configurado apenas para Android. Compilar para iPhone exige um Mac com Xcode.
-
-### 🧪 Testes
+## 🧪 Testes Automatizados
 
 ```bash
 dart format .
@@ -165,52 +152,22 @@ flutter analyze
 flutter test
 ```
 
-O projeto tem mais de 120 testes automatizados (cálculo de distância e ritmo, banco de dados em memória, sincronização, recuperação de atividade, estatísticas e navegação).
+O projeto possui **mais de 180 testes automatizados** cobrindo cálculo de velocidade e pace, gerador de cores de ritmo, rastreador de áudio, banco de dados SQLite em memória, sincronização Firestore, persistência de preferências, validação de formulários e navegação de telas.
 
 ---
 
-## ☁️ Dados na nuvem
-
-As atividades ficam no Cloud Firestore, separadas por usuário:
-
-```
-users/{uid}/activities/{id da atividade}
-users/{uid}/activities/{id}/routeChunks/{0000, 0001, ...}
-```
-
-O trajeto vai em partes de 500 pontos (`routeChunks`), por causa do limite de 1 MiB por documento do Firestore. As regras de segurança permitem que cada usuário leia e escreva somente os próprios dados:
-
-```
-rules_version = '2';
-service cloud.firestore {
-  match /databases/{database}/documents {
-    match /users/{userId}/{document=**} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
-    }
-  }
-}
-```
-
----
-
-
-## 🗂️ Organização do trabalho
-
-- **Quadro:** aba *Projects* deste repositório (Kanban: Backlog, Ready, In progress, In review, Done)
-- **Tarefas:** aba *Issues* (uma issue por requisito funcional)
-- **Sprints:** *Milestones* de 15 dias
-- **Branches:** `main` (estável) e uma branch por tarefa (`feature/nome-da-funcionalidade`), integrada por pull request
-
----
+## 📊 Matriz de Atendimento aos Requisitos Mínimos
 
 | Requisito Mínimo | Como a proposta atende | Onde aparece (tela ou funcionalidade) |
 | :--- | :--- | :--- |
-| **Pelo menos 6 telas diferentes** | O aplicativo possui 8 telas distintas: Login, Cadastro, Início/Dashboard, Gravação de Atividade, Histórico de Corridas, Detalhes da Atividade, Configurações e Perfil de Usuário. | Em todo o aplicativo (Navegação via GoRouter). |
-| **Integração com API do dispositivo (GPS, Sensores, etc.)** | Utiliza o GPS nativo do aparelho para rastreamento de percurso em tempo real, Síntese de Voz (TTS) para narração de quilometragem e Wake Lock para manter a tela acesa no treino. | Tela de Gravação (`RecordingPage`) e Áudio Cues durante a corrida. |
-| **Integração com API externa** | Consome a API do Google Gemini para o Coach de IA, a API do Open-Meteo para Clima/Temperatura, a API do Mapbox para mapas HD e Firebase Auth/Firestore para autenticação e nuvem. | Tela de Detalhes (`ActivityDetailsPage`), Card de Redes Sociais e Serviço de IA (`AiCoachService`). |
-| **Armazenamento local com acesso offline** | Utiliza banco de dados SQLite nativo através do pacote Drift, permitindo gravar treinos, salvar rascunhos em caso de fechamento e consultar histórico sem internet. | Repositório Local (`DriftActivityRepository` / SQLite) e sincronização assíncrona em segundo plano. |
-| **Flutter para Android e iOS** | Desenvolvido em Flutter com código limpo e permissões multiplataforma configuradas em AndroidManifest.xml. | Todo o código-fonte em Dart/Flutter. |
-| **Grupo de 3 ou 4 integrantes e repositório no GitHub** | Projeto mantido em repositório no GitHub com versionamento por branches de funcionalidades e Pull Requests. | Repositório público/privado do grupo no GitHub. |
+| **Pelo menos 6 telas diferentes** | O aplicativo possui 8 telas distintas: Login, Cadastro, Início/Dashboard, Gravação de Atividade, Histórico, Detalhes da Atividade, Configurações e Perfil. | Navegação em todo o app via GoRouter. |
+| **Integração com API do dispositivo (GPS, Sensores, etc.)** | Utiliza GPS nativo para rastreamento de rota, Síntese de Voz (TTS) para narração a cada 1 km, Wake Lock para manter a tela acesa e Notificação Foreground. | Tela de Gravação (`RecordingPage`) e serviço de Audio Cues. |
+| **Integração com API externa** | Consome a API do Google Gemini para o Coach de IA, a API do Open-Meteo para Clima/Temperatura, a API do Mapbox para mapas HD e Firebase Auth/Firestore. | Tela de Detalhes (`ActivityDetailsPage`), Card Social e `AiCoachService`. |
+| **Armazenamento local com acesso offline** | Utiliza banco de dados SQLite nativo através do pacote Drift, gravando corridas e rascunhos com suporte 100% Offline-First antes de sincronizar na nuvem. | Repositório Local (`DriftActivityRepository` / SQLite) e sincronização assíncrona. |
+| **Flutter para Android e iOS** | Desenvolvido em Flutter com código limpo em Dart e permissões multiplataforma configuradas em AndroidManifest.xml. | Todo o código-fonte em Dart/Flutter. |
+| **Grupo de 3 ou 4 integrantes e repositório no GitHub** | Projeto mantido em repositório no GitHub com versionamento por branches de funcionalidades e Pull Requests. | Repositório no GitHub. |
+
+---
 
 ## 📄 Licença
 
