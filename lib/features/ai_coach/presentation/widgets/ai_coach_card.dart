@@ -2,11 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:runmares/app/theme/app_colors.dart';
 import 'package:runmares/features/ai_coach/domain/ai_coach_service.dart';
 import 'package:runmares/features/history/domain/activity_details.dart';
+import 'package:runmares/features/weather/domain/weather_info.dart';
 
 class AiCoachCard extends StatefulWidget {
-  const AiCoachCard({required this.details, super.key});
+  const AiCoachCard({
+    required this.details,
+    this.weatherInfo,
+    super.key,
+  });
 
   final ActivityDetails details;
+  final WeatherInfo? weatherInfo;
 
   @override
   State<AiCoachCard> createState() => _AiCoachCardState();
@@ -56,6 +62,7 @@ class _AiCoachCardState extends State<AiCoachCard> {
         }
 
         final analysis = snapshot.data!;
+        final weather = widget.weatherInfo;
 
         return Container(
           padding: const EdgeInsets.all(16),
@@ -75,6 +82,7 @@ class _AiCoachCardState extends State<AiCoachCard> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Container(
                     padding: const EdgeInsets.symmetric(
@@ -102,6 +110,14 @@ class _AiCoachCardState extends State<AiCoachCard> {
                       ],
                     ),
                   ),
+                  if (weather != null)
+                    Text(
+                      '${weather.emoji} ${weather.temperatureC.round()}°C',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.primary,
+                      ),
+                    ),
                 ],
               ),
               const SizedBox(height: 10),

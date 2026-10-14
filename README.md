@@ -32,9 +32,9 @@ Muitas pessoas querem acompanhar a evolução nos treinos, mas dependem de apps 
 | ID | Funcionalidade | Situação |
 |---|---|---|
 | RF01 | Cadastro, login e sessão (e-mail e senha) | Implementado |
-| RF02 | Iniciar, pausar, retomar e finalizar uma atividade | Implementado, validação em celular real pendente |
-| RF03 | Distância, tempo e ritmo médio em tempo real | Implementado, validação em celular real pendente |
-| RF04 | Trajeto no mapa, ao vivo e depois de finalizada a atividade | Implementado, validação em celular real pendente |
+| RF02 | Iniciar, pausar, retomar e finalizar uma atividade | Implementado |
+| RF03 | Distância, tempo e ritmo médio em tempo real | Implementado |
+| RF04 | Trajeto no mapa, ao vivo e depois de finalizada a atividade | Implementado |
 | RF05 | Salvar no aparelho, sincronizar com a nuvem e recuperar atividade interrompida | Implementado |
 | RF06 | Listar o histórico e ver os detalhes de cada atividade | Implementado |
 | RF07 | Estatísticas semanais e mensais | Implementado |
@@ -203,12 +203,15 @@ service cloud.firestore {
 
 ---
 
-## 📌 Status
-
-🚧 Em desenvolvimento. Todos os requisitos funcionais estão implementados; faltam a validação em celular real e os ajustes finais.
-
----
+| Requisito Mínimo | Como a proposta atende | Onde aparece (tela ou funcionalidade) |
+| :--- | :--- | :--- |
+| **Pelo menos 6 telas diferentes** | O aplicativo possui 8 telas distintas: Login, Cadastro, Início/Dashboard, Gravação de Atividade, Histórico de Corridas, Detalhes da Atividade, Configurações e Perfil de Usuário. | Em todo o aplicativo (Navegação via GoRouter). |
+| **Integração com API do dispositivo (GPS, Sensores, etc.)** | Utiliza o GPS nativo do aparelho para rastreamento de percurso em tempo real, Síntese de Voz (TTS) para narração de quilometragem e Wake Lock para manter a tela acesa no treino. | Tela de Gravação (`RecordingPage`) e Áudio Cues durante a corrida. |
+| **Integração com API externa** | Consome a API do Google Gemini para o Coach de IA, a API do Open-Meteo para Clima/Temperatura, a API do Mapbox para mapas HD e Firebase Auth/Firestore para autenticação e nuvem. | Tela de Detalhes (`ActivityDetailsPage`), Card de Redes Sociais e Serviço de IA (`AiCoachService`). |
+| **Armazenamento local com acesso offline** | Utiliza banco de dados SQLite nativo através do pacote Drift, permitindo gravar treinos, salvar rascunhos em caso de fechamento e consultar histórico sem internet. | Repositório Local (`DriftActivityRepository` / SQLite) e sincronização assíncrona em segundo plano. |
+| **Flutter para Android e iOS** | Desenvolvido em Flutter com código limpo e permissões multiplataforma configuradas em AndroidManifest.xml. | Todo o código-fonte em Dart/Flutter. |
+| **Grupo de 3 ou 4 integrantes e repositório no GitHub** | Projeto mantido em repositório no GitHub com versionamento por branches de funcionalidades e Pull Requests. | Repositório público/privado do grupo no GitHub. |
 
 ## 📄 Licença
 
-Projeto acadêmico, sem fins comerciais.
+Desenvolvido por Gustavson Barros.

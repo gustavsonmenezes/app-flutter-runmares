@@ -19,6 +19,8 @@ import 'package:runmares/features/recording/presentation/extensions/activity_typ
 import 'package:runmares/features/recording/presentation/extensions/route_segments_extension.dart';
 import 'package:runmares/features/recording/presentation/widgets/recording_metrics.dart';
 import 'package:runmares/features/settings/presentation/providers/settings_providers.dart';
+import 'package:runmares/features/weather/domain/weather_info.dart';
+import 'package:runmares/features/weather/presentation/widgets/weather_badge.dart';
 import 'package:screenshot/screenshot.dart';
 import 'package:share_plus/share_plus.dart';
 
@@ -76,6 +78,7 @@ class _DetailsContent extends StatefulWidget {
 
 class _DetailsContentState extends State<_DetailsContent> {
   final ScreenshotController _screenshotController = ScreenshotController();
+  WeatherInfo? _weatherInfo;
   bool _isSharing = false;
 
   Future<void> _shareCard() async {
@@ -89,6 +92,7 @@ class _DetailsContentState extends State<_DetailsContent> {
           child: ShareableActivityCard(
             details: widget.details,
             unit: widget.unit,
+            weatherInfo: _weatherInfo,
           ),
         ),
         delay: const Duration(milliseconds: 100),
@@ -159,6 +163,13 @@ class _DetailsContentState extends State<_DetailsContent> {
             ),
           ),
           const SizedBox(height: AppSpacing.itemGap),
+          WeatherBadge(
+            details: widget.details,
+            onWeatherLoaded: (weather) {
+              if (mounted) setState(() => _weatherInfo = weather);
+            },
+          ),
+          const SizedBox(height: AppSpacing.itemGap),
           RecordingMetrics(
             distanceMeters: summary.distanceMeters,
             elapsed: summary.duration,
@@ -169,7 +180,10 @@ class _DetailsContentState extends State<_DetailsContent> {
             ),
           ),
           const SizedBox(height: AppSpacing.screenPadding),
-          AiCoachCard(details: widget.details),
+          AiCoachCard(
+            details: widget.details,
+            weatherInfo: _weatherInfo,
+          ),
           const SizedBox(height: AppSpacing.screenPadding),
           SizedBox(
             height: 52,

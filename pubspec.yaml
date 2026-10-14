@@ -54,6 +54,7 @@ dependencies:
   share_plus: ^13.3.1
   screenshot: ^3.0.0
   path_provider: ^2.1.5
+  http: ^1.2.2
 
 dev_dependencies:
   flutter_test:

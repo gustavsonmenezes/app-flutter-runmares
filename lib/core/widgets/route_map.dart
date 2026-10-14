@@ -76,7 +76,7 @@ class _RouteMapState extends State<RouteMap> {
           options: _buildOptions(points),
           children: [
             TileLayer(
-              urlTemplate: mapStyle.urlTemplate,
+              urlTemplate: mapStyle.resolvedUrl(),
               maxNativeZoom: mapStyle.maxNativeZoom,
               userAgentPackageName: _userAgentPackage,
             ),
@@ -89,6 +89,8 @@ class _RouteMapState extends State<RouteMap> {
                         points: coloredSeg.points,
                         strokeWidth: _routeWidth,
                         color: coloredSeg.color,
+                        strokeCap: StrokeCap.round,
+                        strokeJoin: StrokeJoin.round,
                       )
                 else
                   for (final segment in widget.segments)
@@ -97,6 +99,8 @@ class _RouteMapState extends State<RouteMap> {
                         points: segment,
                         strokeWidth: _routeWidth,
                         color: AppColors.primary,
+                        strokeCap: StrokeCap.round,
+                        strokeJoin: StrokeJoin.round,
                       ),
               ],
             ),
@@ -106,6 +110,25 @@ class _RouteMapState extends State<RouteMap> {
             ),
           ],
         ),
+        if (points.isNotEmpty)
+          Positioned(
+            top: 12,
+            right: 12,
+            child: Material(
+              color: Colors.transparent,
+              child: FloatingActionButton.small(
+                heroTag: null,
+                backgroundColor: AppColors.surfaceDark.withValues(alpha: 0.85),
+                foregroundColor: AppColors.primary,
+                elevation: 2,
+                onPressed: () {
+                  final lastPoint = points.last;
+                  _controller.move(lastPoint, _focusZoom);
+                },
+                child: const Icon(Icons.my_location_rounded),
+              ),
+            ),
+          ),
         if (widget.showPaceLegend && hasColoredSegments)
           const _PaceLegendOverlay(),
       ],
